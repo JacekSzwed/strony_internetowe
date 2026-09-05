@@ -8,6 +8,13 @@ const { T, TEX, KAFLE } = G;
 const W = 320, H = 180;
 const GRAW = .28, MAX_SPAD = 5, SKOK = -5, PREDKOSC = 1.65;
 
+/* ------------------------------------------------------------------ poziomy trudności */
+const TRUDNOSCI = [
+  { id: 'latwy', nazwa: 'Łatwy', zycia: 10, serca: 10 },
+  { id: 'normalny', nazwa: 'Normalny', zycia: 5, serca: 5 },
+  { id: 'trudny', nazwa: 'Trudny', zycia: 3, serca: 3 },
+];
+
 const canvas = document.getElementById('gra');
 const g = canvas.getContext('2d');
 canvas.width = W; canvas.height = H; g.imageSmoothingEnabled = false;
@@ -62,9 +69,13 @@ const odl = (a, b) => Math.hypot((a.x + a.w / 2) - (b.x + b.w / 2), (a.y + a.h /
 
 /* ------------------------------------------------------------------ stan gry */
 const gra = {
-  stan: 'tytul', poziomNr: 0, zycia: 3, szmaragdy: 0, szmaragdyPoziomu: 0, czas: 0, t: 0, timer: 0,
+  stan: 'tytul', poziomNr: 0, zycia: 0, szmaragdy: 0, szmaragdyPoziomu: 0, czas: 0, t: 0, timer: 0,
   menu: 0, tytulT: 0, wstrzas: 0, blysk: 0, postep: parseInt(localStorage.getItem('gra-postep') || '0'),
   rekord: parseInt(localStorage.getItem('gra-rekord') || '0'), ukonczono: false, komunikat: null,
+  trudnosc: (() => {
+    const tr = parseInt(localStorage.getItem('gra-trudnosc') || '1');
+    return klamra(tr, 0, TRUDNOSCI.length - 1);
+  })(),
 };
 let P = null;          // aktualny poziom
 let gracz = null;
@@ -109,7 +120,7 @@ function wczytajPoziom(nr, zachowaj) {
   }
   if (P.bossPokonany && def.dzwonPoBossie) P.dzwon = { x: def.dzwonPoBossie.x * T + 2, y: def.dzwonPoBossie.y * T, w: 12, h: 20, kat: 0, v: 0 };
   const s = P.checkpoint ? { x: P.checkpoint.x, y: P.checkpoint.y } : P.start;
-  gracz = { x: s.x, y: s.y, w: 10, h: 21, vx: 0, vy: 0, dir: 1, naZiemi: false, hp: 3, nietykalny: 0, martwy: 0, anim: 0, coyote: 0, bufor: 0, drabina: false, platforma: null, wygrana: 0, mrug: 0 };
+  gracz = { x: s.x, y: s.y, w: 10, h: 21, vx: 0, vy: 0, dir: 1, naZiemi: false, hp: TRUDNOSCI[gra.trudnosc].serca, nietykalny: 0, martwy: 0, anim: 0, coyote: 0, bufor: 0, drabina: false, platforma: null, wygrana: 0, mrug: 0 };
   kamera.x = klamra(gracz.x - W / 2, 0, P.szer * T - W); kamera.y = klamra(gracz.y - H / 2, 0, P.wys * T - H);
   gra.szmaragdyPoziomu = zachowaj ? zachowaj.szmaragdyPoziomu : gra.szmaragdy;
 }
@@ -258,7 +269,7 @@ function aktualizujGracza() {
       czastki(it.x + 4, it.y + 4, 6, ['#17DD62', '#B4FFD0', '#0B9E43'], { grav: .02, sila: 1 });
       if (gra.szmaragdy % 50 === 0) { gra.zycia++; D.sfx('totem'); napis(p.x - 10, p.y - 10, '+1 życie', '#FFE066'); }
     } else if (it.typ === 'jablko') {
-      p.hp = 3; D.sfx('jablko'); napis(p.x - 12, p.y - 10, 'Pełne zdrowie!', '#FFE066');
+      p.hp = TRUDNOSCI[gra.trudnosc].serca; D.sfx('jablko'); napis(p.x - 12, p.y - 10, 'Pełne zdrowie!', '#FFE066');
       czastki(it.x + 4, it.y + 4, 10, ['#F2C23A', '#FFF3B0'], { grav: .02 });
     } else if (it.typ === 'totem') {
       gra.zycia++; D.sfx('totem'); napis(p.x - 8, p.y - 10, '+1 życie', '#FFE066');
@@ -445,7 +456,7 @@ function startPoziomu() {
   gra.stan = 'karta'; gra.timer = 0; D.stopMuzyke();
 }
 function nowaGra(odPoziomu = 0) {
-  gra.poziomNr = odPoziomu; gra.zycia = 3; gra.szmaragdy = 0; gra.czas = 0;
+  gra.poziomNr = odPoziomu; gra.zycia = TRUDNOSCI[gra.trudnosc].zycia; gra.szmaragdy = 0; gra.czas = 0;
   gra.stan = 'intro'; gra.timer = 0; D.stopMuzyke();
   if (odPoziomu > 0) startPoziomu();
 }
@@ -465,6 +476,12 @@ function aktualizuj() {
       if (Math.random() < .004) D.sfx('kurczak');
       break; }
     case 'sterowanie': if (wej.ok() || wej.pauza()) { gra.stan = 'tytul'; D.sfx('menu'); } break;
+    case 'wyborPoziomu': {
+      if (wej.menuGora()) { gra.menu = gra.menu > 0 ? gra.menu - 1 : gra.postep; D.sfx('menu'); }
+      if (wej.menuDol()) { gra.menu = gra.menu < gra.postep ? gra.menu + 1 : 0; D.sfx('menu'); }
+      if (wej.ok()) { D.sfx('wybor'); nowaGra(gra.menu); }
+      if (wej.pauza()) { gra.stan = 'tytul'; gra.menu = 0; D.sfx('menu'); }
+      break; }
     case 'intro': gra.timer += 1 / 60; if (wej.ok() || gra.timer > 14) { startPoziomu(); } break;
     case 'karta': gra.timer += 1 / 60; if (wej.ok() || gra.timer > 3.2) { gra.stan = 'gra'; D.grajMuzyke(P.def.muzyka); } break;
     case 'gra': {
@@ -501,7 +518,7 @@ function aktualizuj() {
       if (P.dzwon) { P.dzwon.kat += P.dzwon.v; P.dzwon.v -= P.dzwon.kat * .02; P.dzwon.v *= .995; }
       if (gra.timer > 2 && (wej.ok() || gra.timer > 6)) nastepnyPoziom();
       break; }
-    case 'gameover': gra.timer += 1 / 60; if (gra.timer > 1.2 && wej.ok()) { gra.zycia = 3; gra.szmaragdy = gra.szmaragdyPoziomu; startPoziomu(); } break;
+    case 'gameover': gra.timer += 1 / 60; if (gra.timer > 1.2 && wej.ok()) { gra.zycia = TRUDNOSCI[gra.trudnosc].zycia; gra.szmaragdy = gra.szmaragdyPoziomu; startPoziomu(); } break;
     case 'zwyciestwo': gra.timer += 1 / 60; if (gra.timer > 3 && wej.ok()) { gra.stan = 'tytul'; gra.menu = 0; D.stopMuzyke(); } break;
   }
   if (gra.wstrzas > 0) gra.wstrzas--;
@@ -512,7 +529,9 @@ function aktualizuj() {
 function opcjeMenu() {
   const o = [{ n: 'Nowa gra', akcja: () => nowaGra(0) }];
   if (gra.postep > 0) o.push({ n: 'Kontynuuj: poziom ' + (gra.postep + 1), akcja: () => nowaGra(gra.postep) });
+  if (gra.postep > 0) o.push({ n: 'Wybierz poziom', akcja: () => { gra.stan = 'wyborPoziomu'; gra.menu = Math.min(gra.postep, gra.menu); } });
   o.push({ n: 'Sterowanie', akcja: () => { gra.stan = 'sterowanie'; } });
+  o.push({ n: () => 'Trudność: ' + TRUDNOSCI[gra.trudnosc].nazwa, akcja: () => { gra.trudnosc = (gra.trudnosc + 1) % TRUDNOSCI.length; localStorage.setItem('gra-trudnosc', gra.trudnosc); D.sfx('menu'); } });
   o.push({ n: () => 'Dźwięk: ' + (D.czyWyciszone() ? 'wył.' : 'wł.'), akcja: () => D.wycisz() });
   return o;
 }
@@ -658,7 +677,8 @@ function rysujDymek(n, cx, cy) {
   g.globalAlpha = 1;
 }
 function rysujHUD() {
-  for (let i = 0; i < 3; i++) g.drawImage(G.SERCE[i < gracz.hp ? 0 : 1], 4 + i * 9, 4);
+  const maxSerca = TRUDNOSCI[gra.trudnosc].serca;
+  for (let i = 0; i < maxSerca; i++) g.drawImage(G.SERCE[i < gracz.hp ? 0 : 1], 4 + i * 9, 4);
   g.drawImage(G.IKONA_SZMARAGD, W / 2 - 18, 4);
   C.tekst(g, String(gra.szmaragdy), W / 2 - 7, 3, '#FFFFFF', { cien: '#000' });
   g.drawImage(G.PORTRET, W - 30, 3);
@@ -710,7 +730,8 @@ function rysujTytul() {
   C.tekst(g, 'EMERYK', W / 2, 18, '#FFE066', { wyr: 'srodek', skala: 3, cien: '#3F2A00' });
   C.tekst(g, 'i Skradziony Dzwon', W / 2, 52, '#FFFFFF', { wyr: 'srodek', cien: '#000' });
   const opcje = opcjeMenu();
-  opcje.forEach((o, i) => przyciskMenu(W / 2 - 70, 72 + i * 17, 140, o.n, i === gra.menu));
+  const odstep = opcje.length > 4 ? 14 : 17; // zmniejsz odstęp gdy więcej opcji
+  opcje.forEach((o, i) => przyciskMenu(W / 2 - 70, 72 + i * odstep, 140, o.n, i === gra.menu));
   if (gra.rekord > 0) C.tekst(g, 'Rekord: ' + gra.rekord + ' szmaragdów', W - 4, 4, '#B4FFD0', { wyr: 'prawo', cien: '#000' });
   C.tekst(g, '♥ Kurczak z lawy', 256, zy + 22, '#FFB347', { wyr: 'srodek', cien: '#000' });
 }
@@ -721,6 +742,18 @@ function rysujSterowanie() {
   const l = ['← →  lub  A D  – ruch', '↑ / SPACJA / Z  – skok (dłużej = wyżej)', '↑ ↓  – drabiny', 'ESC / P  – pauza      M  – dźwięk', '', 'Skacz na potwory, żeby je pokonać.', 'Creepery po skoku syczą i wybuchają – uciekaj!', 'Zbieraj szmaragdy: 50 = dodatkowe życie.', 'Złote jabłko leczy, ognisko = punkt kontrolny.', 'Dotknij dzwonu, aby ukończyć poziom.'];
   l.forEach((s, i) => C.tekst(g, s, 30, 36 + i * 11, i < 4 ? '#FFFFFF' : '#DDDDDD', { cien: '#000' }));
   C.tekst(g, 'ENTER – powrót', W / 2, 150, '#FFFFA0', { wyr: 'srodek', cien: '#000' });
+}
+function rysujWyborPoziomu() {
+  G.rysujTlo(g, 'las', W, H, gra.t * 4, 0, gra.t);
+  panel(40, 14, 240, 152);
+  C.tekst(g, 'WYBIERZ POZIOM', W / 2, 20, '#FFE066', { wyr: 'srodek', cien: '#000' });
+  for (let i = 0; i <= gra.postep; i++) {
+    const p = window.POZIOMY[i];
+    const y = 40 + i * 18;
+    g.fillStyle = i === gra.menu ? '#FFE066' : '#FFFFFF';
+    C.tekst(g, (i + 1) + '. ' + p.nazwa, 60, y, g.fillStyle, { cien: '#000' });
+  }
+  C.tekst(g, 'ESC – powrót', W / 2, 160, '#FFFFA0', { wyr: 'srodek', cien: '#000' });
 }
 function rysujIntro() {
   G.rysujTlo(g, 'wioska', W, H, gra.t * 3, 0, gra.t);
@@ -793,6 +826,7 @@ function rysuj() {
   switch (gra.stan) {
     case 'tytul': rysujTytul(); break;
     case 'sterowanie': rysujSterowanie(); break;
+    case 'wyborPoziomu': rysujWyborPoziomu(); break;
     case 'intro': rysujIntro(); break;
     case 'karta': rysujKarte(); break;
     case 'gra': rysujSwiat(); rysujHUD(); break;

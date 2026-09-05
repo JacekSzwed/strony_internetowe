@@ -130,8 +130,7 @@ Przyciski dotykowe pokazują się automatycznie na urządzeniach bez myszy (`@me
 
 ### Zasady
 
-- **3 serca** (HP). Trafienie przez wroga lub strzałę = −1 serce i 1,25 s nietykalności (mruganie). Kaktus rani. **Lawa i nacieki (kolce) zabijają natychmiast.** Spadek poza mapę zabija.
-- **Życia** (start: 3, licznik ×N w HUD). Śmierć = −1 życie i powrót do **ostatniego ogniska** (checkpointu) albo startu poziomu. 0 żyć = **Koniec gry** → Enter wznawia poziom z 3 życiami (szmaragdy z tego poziomu przepadają).
+- **HP gracza i Życia** zależą od poziomu trudności (menu główne): Łatwy (10 serc, 10 żyć), Normalny (5 serc, 5 żyć, domyślnie), Trudny (3 serca, 3 życia). Trafienie przez wroga lub strzałę = −1 serce i 1,25 s nietykalności (mruganie). Kaktus rani. **Lawa i nacieki (kolce) zabijają natychmiast.** Spadek poza mapę zabija. Śmierć = −1 życie i powrót do **ostatniego ogniska** (checkpointu) albo startu poziomu. 0 żyć = **Koniec gry** → Enter wznawia poziom z życiami odpowiadającymi wybranej trudności (szmaragdy z tego poziomu przepadają).
 - **Skok na głowę** pokonuje zombie, szkielety, slime'y i pillagerów (skok z góry: `vy > 0` i stopy w górnych 10 px wroga). Zderzenie z boku rani.
 - **Creeper**: gdy podejdziesz na ~22 px, zaczyna **syczeć i po 1 s wybucha** (promień 30 px, 2 serca, zabija też inne wrogi). Skok na głowę **nie** zabija go — tylko odpala krótszy lont (0,45 s) i odbija Cię wysoko. Uciekaj!
 - **Szkielet** strzela łukiem (celuje w Ciebie, zasięg 150 px), **pillager** kuszą (poziomo, zasięg 130 px). Strzały można przeskoczyć.
@@ -144,7 +143,7 @@ Przyciski dotykowe pokazują się automatycznie na urządzeniach bez myszy (`@me
 
 ### Ekrany
 
-`Tytuł` (Emeryk na łące, kurczak na wysepce w lawie ♥, uciekający pillager z dzwonem w tle, menu w stylu Minecrafta) → `Intro` (tekst fabuły pisany litera po literze) → `Karta poziomu` (numer, nazwa, opis, życia) → **Gra** ⇄ `Pauza` → `Poziom ukończony` (szmaragdy, czas) → … → `Zwycięstwo` (dzwon w wiosce, fajerwerki, rekord) / `Koniec gry`.
+`Tytuł` (Emeryk na łące, kurczak na wysepce w lawie ♥, uciekający pillager z dzwonem w tle, menu w stylu Minecrafta, poziom trudności do wyboru) → `Intro` (tekst fabuły pisany litera po literze) → `Karta poziomu` (numer, nazwa, opis, życia) → **Gra** ⇄ `Pauza` → `Poziom ukończony` (szmaragdy, czas) → … → `Zwycięstwo` (dzwon w wiosce, fajerwerki, rekord) / `Koniec gry`. Menu główne zawiera też opcję `Wybierz poziom` (dostępne dla graczy z postępem > 0) — lista poziomów od 0 do najwyższego odblokowanego, nawigacja strzałkami, Start/Enter, Esc powrót.
 
 ---
 
@@ -258,6 +257,7 @@ Bitmapowa 5×7, siatka 6 px, wysokość linii 12 px, **pełne polskie znaki** (�
 | --- | --- |
 | `gra-postep` | indeks najwyższego odblokowanego poziomu (0–4) — „Kontynuuj” w menu |
 | `gra-rekord` | najlepszy wynik szmaragdów za całą grę |
+| `gra-trudnosc` | indeks poziomu trudności (0=Łatwy, 1=Normalny, 2=Trudny); domyślnie 1 |
 | `gra-wyciszone` | `'1'` = dźwięk wyłączony |
 | `theme` | `'dark'`/`'light'` — motyw strony |
 
@@ -315,7 +315,7 @@ Szczegółowe, krok po kroku przepisy są w skillach (`.github/skills/*/SKILL.md
 | Chcę… | Gdzie | Potem |
 | --- | --- | --- |
 | **dodać poziom** | `gra/poziomy.js` — skopiuj szablon ze skilla `gra-poziomy`, wstaw blok przed `window.POZIOMY` (poziom z bossem musi zostać ostatni) | `node gra/analiza.js` → 0 pułapek; `npm test`; dopisz do tabeli w §5 |
-| **zmienić trudność** | stałe fizyki (`gra.js` góra), prędkości wrogów (`nowyWrog`), zasięgi widzenia (`aktualizujWroga`), HP bossa (`nowyWrog` → `case 'boss'`), życia startowe (`gra.zycia = 3` w `nowaGra`) | `npm run test:przegladarka` |
+| **zmienić trudność** | `gra.js`: tablica `TRUDNOSCI` (id, nazwa, zycia, serca), wybór w menu głównym przez pozycję „Trudność", zmiana zapisana w localStorage (`gra-trudnosc`). Wszystkie `gra.zycia = 3` i `hp: 3` automatycznie używają `TRUDNOSCI[gra.trudnosc]` | `npm test`; `npm run test:przegladarka` |
 | **nowego wroga** | 5 miejsc: sprite w `grafika.js`, `nowyWrog`, `aktualizujWroga`, `sprWroga`/`rysujWroga`/`koloryWroga`, znak w `wczytajPoziom` — checklista w skillu `gra-grafika` | dopisz znak do „znane” w `test-skladnia.js`, do legendy w `AGENTS.md` i tu |
 | **nowy przedmiot** | `wczytajPoziom` (case) → pętla w `aktualizujGracza` → `rysujSwiat`; sprite w `grafika.js` | jw. |
 | **nowy kafel** | `KAFLE` w `grafika.js` (+ `tekstura()` case, paleta w `PAL`) | `STALE`/`SMIERTELNE` w `analiza.js`, „znane” w `test-skladnia.js` |
