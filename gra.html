@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Emeryk i Skradziony Dzwon – gra</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@south-paw/typeface-minecraft/index.css">
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b0b12; overflow: hidden; touch-action: none; }
+      body { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Minecraft', monospace; color: #ddd; }
+      #gra {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        background: #000;
+        box-shadow: 0 0 0 2px #000, 0 0 40px rgba(120, 90, 255, .25);
+        touch-action: none;
+      }
+      .pasek {
+        position: fixed; top: 6px; left: 8px; right: 8px;
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 13px; text-shadow: 1px 1px 0 #000; pointer-events: none;
+      }
+      .pasek a, .pasek span { pointer-events: auto; color: #ddd; text-decoration: none; background: rgba(0,0,0,.5); padding: 4px 8px; border: 1px solid #444; }
+      .pasek a:hover { color: #ffffa0; border-color: #888; }
+      .pasek .podpowiedz { opacity: .8; font-size: 12px; }
+      /* sterowanie dotykowe — pokazywane tylko na urządzeniach bez myszki */
+      .dotyk { display: none; position: fixed; bottom: 12px; left: 0; right: 0; justify-content: space-between; padding: 0 16px; pointer-events: none; }
+      .dotyk div { display: flex; gap: 10px; }
+      .dotyk button {
+        pointer-events: auto; width: 60px; height: 60px; font-size: 26px; color: #fff; border: 2px solid #000; border-radius: 0;
+        background: rgba(110,110,110,.75); box-shadow: inset 2px 2px 0 rgba(255,255,255,.35), inset -2px -2px 0 rgba(0,0,0,.4);
+        user-select: none; -webkit-user-select: none; touch-action: none;
+      }
+      .dotyk button:active { background: rgba(122,122,224,.85); }
+      @media (pointer: coarse) { .dotyk { display: flex; } .pasek .podpowiedz { display: none; } }
+    </style>
+  </head>
+  <body>
+    <canvas id="gra" width="320" height="180"></canvas>
+    <div class="pasek">
+      <a href="index.html">◄ Powrót do strony</a>
+      <span class="podpowiedz">← → ruch · SPACJA skok · ESC pauza · M dźwięk</span>
+    </div>
+    <div class="dotyk" aria-hidden="true">
+      <div><button id="d-lewo">◄</button><button id="d-prawo">►</button></div>
+      <div><button id="d-dol">▼</button><button id="d-gora">▲</button><button id="d-skok">●</button></div>
+    </div>
+    <script src="gra/czcionka.js"></script>
+    <script src="gra/dzwiek.js"></script>
+    <script src="gra/grafika.js"></script>
+    <script src="gra/poziomy.js"></script>
+    <script src="gra/gra.js"></script>
+  </body>
+</html>
