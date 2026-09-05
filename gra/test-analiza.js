@@ -146,7 +146,7 @@ const POZIOMY = window.POZIOMY;
 const podmien = (m, x, y, s) => m.map((r, yy) => yy === y ? r.slice(0, x) + s + r.slice(x + s.length) : r);
 for (const [i, p] of POZIOMY.entries()) { const w = analizuj(p.mapa); test(`poziom ${i + 1} „${p.nazwa}”: meta i przedmioty osiągalne, bez pułapek`, !w.problem, `meta ${w.osiagalne.length}/${w.cele.length}, brak: ${w.brak.join(' ')}, pułapki: ${JSON.stringify(w.pulapki)}`); }
 // poziom 2 (Ciemny Las), koniec: półka lll w wierszu 12 pod koroną drzewa(174) blokowała korytarz — commit „przejście pod drzewem”
-let las = POZIOMY[1].mapa; las = podmien(las, 165, 11, '   '); las = podmien(las, 165, 9, '   '); las = podmien(las, 170, 12, 'lll'); las = podmien(las, 170, 10, 'eee');
+let las = POZIOMY[1].mapa; las = podmien(las, 165, 12, '   '); las = podmien(las, 170, 12, 'lll'); las = podmien(las, 170, 10, 'eee');
 const wLas = analizuj(las);
 test('poziom 2 ze STARĄ półką pod koroną (rzad(170,12) + szmaragdy(170,10)) → meta NIEOSIĄGALNA', wLas.osiagalne.length === 0 && wLas.problem, `meta ${wLas.osiagalne.length}/${wLas.cele.length}`);
 // poziom 5 (Posterunek), dach: półki `__` tuż przy słupkach X pozwalały wskoczyć na szczyt słupka (nad mapą jest powietrze!) i spaść za wieżę

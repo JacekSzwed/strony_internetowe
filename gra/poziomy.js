@@ -133,7 +133,7 @@ const POZIOMY = [];
   fill(158, 12, 161, 12, 'G'); fill(158, 13, 161, 15, 'D');
   put(165, 13, 'c'); put(170, 13, 'z');
   drzewo(174, 14, 4, 2);
-  rzad(165, 11, 'lll'); szmaragdy(165, 9, 3);      // półka PRZED koroną drzewa i 3 kafle nad ziemią — korytarz pod nią jest wolny (ciało = 2 kafle), a jej koniec nie wpada w liście
+  szmaragdy(165, 12, 3);                           // finał bez półek: szmaragdy 2 nad ziemią, korytarz do dzwonu całkiem wolny
   meta(182, 14);
   POZIOMY.push({
     nazwa: 'Ciemny Las', motyw: 'las', muzyka: 'spokojna', mapa: mapa(),
