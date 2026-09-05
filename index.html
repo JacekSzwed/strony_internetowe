@@ -5,18 +5,85 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>postać steve</title>
+    <!-- Czcionka Minecraft pobierana z serwera (CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@south-paw/typeface-minecraft/index.css">
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('ciemny');</script>
     <style>
+      html { background: #8fbcff; }
+      html.ciemny { background: #0f0b1e; }
+
       body {
-        background-color: white;
+        background-color: transparent;
         color: black;
-        transition: background-color 0.3s, color 0.3s;
         margin: 0;
         padding: 0;
+        padding-bottom: calc(var(--blok, 48px) * 4.5);
+        position: relative;
+        overflow-x: hidden;
       }
 
       body.dark-mode {
-        background-color: black;
+        background-color: transparent;
         color: white;
+      }
+
+      /* ---- świat 2D w stylu Minecraft (rysowany w canvas, bez plików graficznych) ---- */
+      canvas.swiat {
+        position: fixed;
+        left: 0;
+        top: 0;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        pointer-events: none;
+      }
+      #tlo { z-index: -1; }
+      #przod { z-index: 5; }
+      #tresc { position: relative; z-index: 1; }
+
+      /* kopia treści w kolorach nowego motywu, odsłaniana za Steve'em */
+      .klon { position: absolute; z-index: 2; pointer-events: none; }
+      .klon.klon-jasny { color: black; }
+      .klon.klon-ciemny { color: white; }
+      .klon.klon-jasny .theme-button { background-color: #333; color: white; }
+      .klon.klon-ciemny .theme-button { background-color: #ddd; color: black; }
+
+      .przyciski { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
+      .przyciski .theme-button { margin-bottom: 0; margin-left: 0; }
+
+      /* przycisk gry w stylu przycisków z menu Minecrafta */
+      .gra-button {
+        padding: 8px 18px;
+        font-family: 'Minecraft', monospace;
+        font-size: 15px;
+        color: #fff;
+        text-shadow: 2px 2px 0 #3f3f3f;
+        background: linear-gradient(#8b8b8b, #6f6f6f);
+        border: 2px solid #000;
+        box-shadow: inset 2px 2px 0 #aaa, inset -2px -2px 0 #555;
+        border-radius: 0;
+        cursor: pointer;
+      }
+      .gra-button:hover {
+        color: #ffffa0;
+        background: linear-gradient(#8f8fff, #6f6fdf);
+        box-shadow: inset 2px 2px 0 #bfbfff, inset -2px -2px 0 #4a4a9a;
+      }
+
+      footer {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        height: calc(var(--blok, 48px) * 2);
+        z-index: 6;
+        pointer-events: none;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 0 12px 6px;
+        box-sizing: border-box;
+        font-family: 'Minecraft', monospace;
+        font-size: 12px;
+        color: #f0e6c8;
+        text-shadow: 1px 1px 0 #000;
       }
 
       .theme-button {
@@ -43,12 +110,23 @@
 
       h1 {
         margin-top: 0;
+        font-family: 'Minecraft', monospace;
+        font-weight: normal;
+        letter-spacing: 1px;
+        text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
       }
     </style>
   </head>
  
   <body>
-    <button class="theme-button" onclick="toggleTheme()">🌙 Ciemny motyw</button>
+    <canvas id="tlo" class="swiat" aria-hidden="true"></canvas>
+    <canvas id="przod" class="swiat" aria-hidden="true"></canvas>
+
+    <main id="tresc">
+    <div class="przyciski">
+      <button class="gra-button" onclick="location.href='gra.html'">🎮 Zagraj w grę</button>
+      <button class="theme-button" onclick="toggleTheme()">🌙 Ciemny motyw</button>
+    </div>
     
     <h1>opis postaci steve!</h1>
 <hr>
@@ -97,7 +175,9 @@ potrafi nosić ogromne ilości materiałów i przedmiotów.<br></li><br>
 niebieska koszulka, granatowe spodnie i brązowe włosy.</li>
 
 </ul>
+    </main>
 
+    <footer><span>© 2026 opis postaci steve</span></footer>
  
   <script>
     function toggleTheme() {
@@ -126,5 +206,6 @@ niebieska koszulka, granatowe spodnie i brązowe włosy.</li>
       }
     });
   </script>
+  <script src="swiat.js"></script>
 </body>
 </html>
