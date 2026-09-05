@@ -59,11 +59,13 @@ strony_internetowe/
 │   ├── grafika.js          tekstury kafli, sprite'y, tła parallax, tabela KAFLE → window.Grafika   (~420 linii)
 │   ├── poziomy.js          5 poziomów budowanych funkcjami                     → window.POZIOMY    (~330 linii)
 │   ├── gra.js              silnik: stan, fizyka, AI wrogów, rysowanie, ekrany  → window.GRA        (~820 linii)
-│   ├── analiza.js          narzędzie: osiągalność + wykrywanie pułapek w poziomach (Node)
+│   ├── analiza.js          narzędzie: osiągalność + wykrywanie pułapek w poziomach (Node); mini-silnik = kopia fizyki gracza; eksportuje analizuj()
+│   ├── scenariusze-skoku.js wspólne syntetyczne scenariusze skoku (41) dla test-analiza i kalibracji w test-przegladarka
 │   ├── test-skladnia.js    test: składnia plików, struktura poziomów, eksporty modułów
+│   ├── test-analiza.js     test: analizator na syntetycznych mapach + regresje prawdziwych poziomów (cofnięte poprawki muszą dać BŁĄD)
 │   ├── test-dzwiek.js      test: utwory i SFX na atrapie Web Audio
-│   └── test-przegladarka.js smoke test w Chromium (Playwright) — strona + gra
-├── package.json            skrypty npm (start, test, test:przegladarka, mapa)
+│   └── test-przegladarka.js smoke test w Chromium (Playwright) — strona + gra + kalibracja analizator↔silnik + korytarz poziomu 2
+├── package.json            skrypty npm (start, test, test:analiza, test:przegladarka[:pelna], mapa)
 ├── AGENTS.md               kompletny przewodnik po kodzie dla agentów AI (i ludzi, którzy lubią zwięźle)
 ├── .github/
 │   ├── copilot-instructions.md   instrukcje ogólne dla Copilota
@@ -180,11 +182,13 @@ Wszystkie poziomy są **automatycznie weryfikowane** (`node gra/analiza.js`): me
 | `SKOK` | −5 | prędkość początkowa skoku |
 | `PREDKOSC` | 1.65 | maks. prędkość biegu |
 
-**Zasięg skoku zmierzony w silniku** (ile pustych kafli da się przeskoczyć):
+**Zasięg skoku zmierzony w silniku** (ile pustych kafli da się przeskoczyć bez „pixel-perfect”; potwierdzone kalibracją analizator↔silnik w 41 scenariuszach):
 
-| lądowanie względem odbicia | +2 w górę | +1 | płasko | −1 | −2 i niżej |
-| --- | --- | --- | --- | --- | --- |
-| maks. przerwa | 2 | 3 | 3 | 3 | 4 |
+| lądowanie względem odbicia | +2 w górę | +1 | płasko | −1 i niżej |
+| --- | --- | --- | --- | --- |
+| maks. przerwa | 2 | 3 | 3 | 4 |
+
+Trasa lotu: głowa sięga **2,6 kafla** nad stopy w 1.–2. kolumnie za krawędzią, więc sufit/korona/półka 3–4 kafle nad podłożem w pierwszych 3 kolumnach przerwy blokuje skok przez 3 kafle (5 nad podłożem już nie). Cokolwiek stałego **1–2 kafle nad korytarzem** to ściana (gracz ma 2 kafle wzrostu). Nad i pod mapą jest powietrze — na ścianie sięgającej wiersza 0 da się stanąć.
 
 Gracz: hitbox 10×21. Przyspieszenie 0.26 (ziemia) / 0.17 (powietrze), tarcie 0.74 / 0.93. **Coyote time** 6 klatek (można skoczyć tuż po zejściu z krawędzi), **bufor skoku** 7 klatek (naciśnięcie chwilę przed lądowaniem działa), **skok zmienny** (puszczenie klawisza obcina `vy` do −1.8).
 
@@ -275,11 +279,13 @@ GRA.poziom.boss                                                    // obiekt bos
 
 | Komenda | Co robi | Czas |
 | --- | --- | --- |
-| `npm test` | **wszystko poniżej bez przeglądarki**: składnia + struktura + poziomy + dźwięk | ~2 s |
+| `npm test` | **wszystko poniżej bez przeglądarki**: składnia + struktura + poziomy + testy analizatora + dźwięk | ~10 s |
 | `npm run test:skladnia` | `gra/test-skladnia.js` — parsowanie każdego JS, eksporty modułów, pola i znaki każdego poziomu, polskie znaki czcionki | <1 s |
-| `npm run test:poziomy` | `gra/analiza.js` — BFS po pozycjach stania z regułami fizyki: **meta osiągalna**, **100 % przedmiotów zbieralnych**, **brak pułapek** (pozycji bez żadnego ruchu wyjścia) | <1 s |
+| `npm run test:poziomy` | `gra/analiza.js` — BFS po pozycjach stania z **mini-silnikiem** (kopia fizyki gracza z `gra.js`: hitbox 10×21, grawitacja, kolizje, krótki skok; każdy skok symulowany po pikselach z każdej klatki rozbiegu): **meta osiągalna**, **100 % przedmiotów zbieralnych**, **brak pułapek** (pozycji, z których nie ma już drogi do mety) | ~2 s |
+| `npm run test:analiza` | `gra/test-analiza.js` — analizator na syntetycznych mapach (tabela zasięgów, sufity, studnie 1–5 kafli szerokie, drabiny, półki) i **regresje prawdziwych poziomów**: obecne mapy OK, a cofnięcie znanych poprawek (półka pod koroną w poziomie 2, półki przy słupkach w poziomie 5) musi dać BŁĄD | ~6 s |
 | `npm run test:dzwiek` | `gra/test-dzwiek.js` — odtwarza 60 s każdego utworu i każdy SFX na atrapie Web Audio; wykrywa puste utwory, ciche efekty, błędne rampy | <1 s |
-| `npm run test:przegladarka` | `gra/test-przegladarka.js` — **Chromium (Playwright)**: brak błędów JS na obu stronach, animacja motywu, wczytanie każdego poziomu, stabilne stanie (brak drgania), skok, lawa → śmierć → respawn, dzwon → koniec poziomu, **pomiar zasięgu skoku** (zgodność z tabelą analizatora). Sam uruchamia i zatrzymuje serwer. | ~40 s |
+| `npm run test:przegladarka` | `gra/test-przegladarka.js` — **Chromium (Playwright)**: brak błędów JS na obu stronach, animacja motywu, wczytanie każdego poziomu, stabilne stanie (brak drgania), skok, lawa → śmierć → respawn, dzwon → koniec poziomu, **kalibracja analizator↔silnik** (bot gra w przeglądarce scenariusze skoku z `gra/scenariusze-skoku.js` — wyroki muszą się zgadzać w 100 %), **korytarz na końcu poziomu 2** (bot dochodzi do dzwonu; na starej geometrii utyka). Czas gry przewijany zegarem Playwright. Sam uruchamia i zatrzymuje serwer. | ~3 min |
+| `npm run test:przegladarka:pelna` | jw. + wszystkie 41 scenariuszy kalibracji (domyślnie 17 brzegowych) | ~6 min |
 | `npm run mapa -- 3` | wypisuje mapę poziomu 3 z numeracją kolumn i wierszy | — |
 | `node gra/analiza.js -v` | jak `test:poziomy` + mapy z kropkami `·` na osiągalnych pozycjach | — |
 
@@ -294,11 +300,11 @@ W VS Code: **Terminal → Run Task** → `test`, `test: przegladarka`, `test: po
 ```
 BŁĄD Poziom 3 Jaskinia: start 3,18, meta osiągalna: 0/1, pozycji: 204, przedmioty 29/31  NIEOSIĄGALNE: e(145,11)  *** PUŁAPKI (bez wyjścia): (67,12)
 ```
-- `meta osiągalna 0/1` — od startu nie da się dojść do dzwonu; `-v` pokaże, gdzie kończą się kropki.
+- `meta osiągalna 0/1` — od startu nie da się dojść do dzwonu; `-v` pokaże, gdzie kończą się kropki (kropka = powietrze tuż nad osiągalną pozycją stania). Typowa przyczyna oprócz zbyt dalekiego skoku: coś stałego 1–2 kafle nad korytarzem (półka, liście) albo 3–4 kafle nad trasą lotu.
 - `NIEOSIĄGALNE: e(x,y)` — szmaragd za wysoko/za daleko od miejsca, gdzie da się stać (obniż o 1 wiersz).
-- `PUŁAPKI (x,y)` — gracz może stanąć w kolumnie x na kaflu y, ale nie ma stamtąd żadnego ruchu (ściany > 2 kafle). Rozwiązanie: **dno `^`/`V`** (śmierć i powrót do checkpointu) albo spłycenie do 2 kafli. **Nie zamykamy dziur** — to decyzja projektowa (pułapki mają zostać, ale być uczciwe).
+- `PUŁAPKI (x,y)` — gracz może stanąć w kolumnie x na kaflu y, ale **nie ma stamtąd drogi do mety** (studnia głębsza niż 2 — dowolnej szerokości; teren za wieżą bez powrotu…). Rozwiązanie: **dno `^`/`V`** (śmierć i powrót do checkpointu), spłycenie do 2 kafli albo uniemożliwienie zeskoku w to miejsce. **Nie zamykamy dziur** — to decyzja projektowa (pułapki mają zostać, ale być uczciwe). Wiele pozycji w jednej linii = jeden obszar; napraw wejście do niego.
 - `UWAGA trudne skoki (x,y)` — ostrzeżenie (kod wyjścia 0): 1-kaflowy słupek ze śmiertelną przepaścią po obu stronach; wymaga idealnego lądowania i natychmiastowego odbicia. Istniejące w Jaskini/Kopalni (półki nad lawą) są celowe; nowe raczej poszerz do 2 kafli.
-- Analizator to przybliżenie (nie liczy pędu ani czasu reakcji) — skalibrowany pomiarami w silniku (tabela w §6), ale trudne miejsca warto sprawdzić w przeglądarce.
+- Analizator zawiera **kopię fizyki gracza** (`krok()` w `analiza.js` — te same stałe i kolizje co `gra.js`) i symuluje każdy skok po pikselach: z każdej klatki rozbiegu, pełny i krótki, aż do lądowania albo śmierci. Widzi więc sufity, korony drzew i półki na trasie lotu. Celowo jest **surowszy** niż gra: nie korzysta z coyote time i odrzuca skoki, które udają się tylko z okna odbicia < 6 px („pixel-perfect”). Zgodność z silnikiem sprawdza `test:przegladarka` (41 scenariuszy, w tym sufity — 100 %). Nie modeluje wrogów, strzał ani ruchu platform w czasie (platformy `m`/`n` liczy jako statyczne pole kafli) — to trzeba sprawdzić w przeglądarce. **Zmieniasz fizykę w `gra.js` → zmień identycznie `krok()`** i uruchom kalibrację.
 
 ---
 
@@ -404,7 +410,9 @@ Rzeczy, które wyglądają jak błędy, ale nie są — nie „naprawiaj” ich:
 | `npm run test:przegladarka` → „Brak pakietu playwright” | `npm i -D playwright && npx playwright install chromium` |
 | `Cannot read properties of null (reading 'x')` w `wczytajPoziom` | brak `@` w mapie — `npm run test:skladnia` to wykrywa |
 | postać drga o 1 px | ktoś zmienił `ruszY` na `e.h - 1` lub skala CSS nie jest całkowita — patrz §11 |
-| gracz utknął w dziurze | `node gra/analiza.js` → `PUŁAPKI (x,y)` → dno `^`/`V` lub spłyć do 2 |
+| gracz utknął w dziurze / w miejscu bez powrotu | `node gra/analiza.js` → `PUŁAPKI (x,y)` → dno `^`/`V`, spłyć do 2 lub uniemożliw zeskok |
+| gracz nie może przejść korytarza (uderza głową w półkę/liście) | `node gra/analiza.js -v` → gdzie kończą się `·`; podnieś półkę na ≥ 3 kafle nad podłożem lub odsuń od korony drzewa (poziom 2 miał tak przy kolumnie 170) |
+| zmieniłem fizykę i analizator się myli | `krok()` w `gra/analiza.js` musi być identyczne z `aktualizujGracza`/`ruszX`/`ruszY`; `npm run test:przegladarka` pokaże, które scenariusze się rozjechały |
 | szmaragd nie do zebrania | `NIEOSIĄGALNE: e(x,y)` → obniż o 1 wiersz |
 | wróg spada przez półkę `_` | półki trzymają tylko od góry; wroga stawiaj **na** półce (wiersz nad `_`), nie nad nią w powietrzu |
 | muzyka nie zmienia się na bossa | boss aktywuje się, gdy gracz jest < 150 px w poziomie i < 60 px w pionie od niego (`aktualizuj()`) |
@@ -424,7 +432,8 @@ Rzeczy, które wyglądają jak błędy, ale nie są — nie „naprawiaj” ich:
 | `7ae8819` | Kurczak w wiosce, układ ekranu tytułowego, README |
 | `2bd70c1` | Nacieki `^` śmiertelne (koniec utykania w studniach); **naprawa drgania postaci** (`ruszY` przy krawędzi stóp; całkowita skala) |
 | `20cd066` | Dach domków w tle odwrócony → naprawiony; detektor pułapek w analizatorze; studnie (67,12) Wioska i (123,18) Jaskinia → śmiertelne dno |
-| *(ten)* | Zestaw dla AI: `AGENTS.md`, 3 agenci (Dev/Tester/Recenzent), 4 skille, 5 promptów, instrukcje per plik, zadania VS Code; testy `npm test` (składnia, poziomy, dźwięk) i `test:przegladarka` (17 testów w Chromium, w tym pomiar zasięgu skoku); analizator skalibrowany pomiarami + ostrzeżenia o trudnych skokach; ten README. Zestaw zweryfikowany na żywo z Haiku 4.5. |
+| `4563c91` | Zestaw dla AI: `AGENTS.md`, 3 agenci (Dev/Tester/Recenzent), 4 skille, 5 promptów, instrukcje per plik, zadania VS Code; testy `npm test` (składnia, poziomy, dźwięk) i `test:przegladarka` (17 testów w Chromium, w tym pomiar zasięgu skoku); analizator skalibrowany pomiarami + ostrzeżenia o trudnych skokach; README. Zestaw zweryfikowany na żywo z Haiku 4.5. |
+| *(ten)* | **Poziom 2**: półka z liści pod koroną drzewa (kol. 170–172) blokowała korytarz do dzwonu → przeniesiona na kol. 165–167, 3 kafle nad ziemią (wejście z pagórka). **Poziom 5**: z półek `__` przy słupkach `X` dało się wskoczyć na szczyt słupka (nad mapą jest powietrze) i spaść za wieżę bez powrotu → półki odsunięte o 2 kafle. **Analizator**: zamiast tabeli zasięgów ma mini-silnik (kopia fizyki gracza) i symuluje lot po pikselach — widzi sufity/korony na trasie; pułapki = pozycje bez drogi do mety (łapie też studnie szerokie i tereny bez powrotu); eksport `analizuj()`. **Testy**: `test-analiza.js` (syntetyczne mapy + regresje prawdziwych poziomów), `scenariusze-skoku.js`, kalibracja analizator↔silnik w Chromium (41/41), bot w grze, korytarz poziomu 2 (nowa geometria przechodnia, stara utyka); test przeglądarkowy przewija czas zegarem Playwright. Tabela zasięgów: −1 w dół → 4 kafle. |
 
 ---
 

@@ -133,7 +133,7 @@ const POZIOMY = [];
   fill(158, 12, 161, 12, 'G'); fill(158, 13, 161, 15, 'D');
   put(165, 13, 'c'); put(170, 13, 'z');
   drzewo(174, 14, 4, 2);
-  rzad(170, 12, 'lll'); szmaragdy(170, 10, 3);
+  rzad(165, 11, 'lll'); szmaragdy(165, 9, 3);      // półka PRZED koroną drzewa i 3 kafle nad ziemią — korytarz pod nią jest wolny (ciało = 2 kafle), a jej koniec nie wpada w liście
   meta(182, 14);
   POZIOMY.push({
     nazwa: 'Ciemny Las', motyw: 'las', muzyka: 'spokojna', mapa: mapa(),
@@ -308,8 +308,10 @@ const POZIOMY = [];
   fill(ax0 - 1, 0, ax0 - 1, 3, 'X'); fill(ax1 + 1, 0, ax1 + 1, 3, 'X');
   put(ax0, 3, 'F'); put(ax1, 3, 'F');
   drabina(L, 3, 9);                                                    // ostatnia drabina przez dach
-  rzad(ax0 + 2, 2, '__'); rzad(ax1 - 3, 2, '__');
-  szmaragdy(ax0 + 2, 0, 2); szmaragdy(ax1 - 3, 0, 2);
+  // półki ze szmaragdami 4 kafle od słupków X: z półki 2 nad podłogą NIE da się wskoczyć na szczyt słupka (2 w górę + 4 przerwy)
+  // i spaść za wieżę na teren bez powrotu (analizator: PUŁAPKA). Nad mapą jest powietrze — na ścianie sięgającej wiersza 0 można stanąć!
+  rzad(ax0 + 4, 2, '__'); rzad(ax1 - 5, 2, '__');
+  szmaragdy(ax0 + 4, 0, 2); szmaragdy(ax1 - 5, 0, 2);
   put(wx + 9, 3, 'b');
   POZIOMY.push({
     nazwa: 'Posterunek Pillagerów', motyw: 'posterunek', muzyka: 'jaskinia', muzykaBoss: 'boss', mapa: mapa(),

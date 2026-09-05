@@ -49,21 +49,26 @@ Motywy tła gotowe: `wioska` (dzień, domki), `las` (zmierzch, drzewa), `jaskini
 **Nowy motyw**: `grafika.js` → dodaj wpis w `NIEBO` (3 kolory gradientu) i `case 'nazwa':` w `rysujTlo()` (użyj `wzgorza/drzewa/domki/chmury/gwiazdy` — sygnatury obok w pliku).
 Muzyka: `spokojna` (wioska/las), `jaskinia` (mrok), `boss`. Nowy utwór → skill `gra-dzwiek`.
 
-## Reguły grywalności (zasięg skoku ZMIERZONY w silniku)
+## Reguły grywalności (zasięg skoku ZMIERZONY w silniku; analizator = ta sama fizyka)
 
 | Lądowanie względem odbicia | Maks. przerwa (puste kafle) |
 | --- | --- |
 | +2 w górę | **2** |
-| +1 w górę / płasko / −1 | **3** |
-| −2 i niżej | **4** |
+| +1 w górę / płasko | **3** |
+| −1 i niżej | **4** |
+
+**Trasa lotu też się liczy** — głowa sięga 2,6 kafla nad stopy w 1.–2. kolumnie za krawędzią. Cokolwiek stałego 3–4 kafle nad podłożem w pierwszych 3 kolumnach przerwy (korona drzewa `l`, belka, półka, sufit jaskini) blokuje skok przez 3 kafle. Analizator to symuluje.
 
 | Sytuacja | Dobrze | Źle |
 | --- | --- | --- |
 | Platforma nad ziemią | 1–2 kafle wyżej | 3+ (nieosiągalna) |
+| **Półka/liście nad korytarzem, po którym się chodzi** | ≥ 3 kafle nad podłożem (pod nią przejście 2 kafle), wejście z pagórka/schodów | 1–2 kafle nad ziemią = **ściana** (ciało ma 2 kafle) — błąd z końca poziomu 2 |
+| Półka obok drzewa | poza koroną (`drzewo(x,y,h,r)`: korona `x-r..x+r`, wiersze `y-h-3..y-h`) | wsunięta pod koronę — z półki nie da się zeskoczyć dalej (głowa w liściach) |
 | Przerwa do przeskoczenia | wg tabeli wyżej | np. 3 kafle **i** +2 w górę naraz |
 | Miejsce odbicia / lądowania przy lawie lub przepaści | ≥ 2 kafle szerokości | 1-kaflowy słupek między dwiema przepaściami (analizator: `UWAGA trudne skoki`) |
 | Dwie przeszkody pod rząd | ≥ 2 kafle płaskiego podłoża między nimi | lawa tuż za `dziura()` bez miejsca na wylądowanie |
-| Dziura między ścianami | głębokość ≤ 2 **albo** dno `V`/`^` | głębokość 3 z pustym dnem = **pułapka** |
+| Dziura między ścianami | głębokość ≤ 2 **albo** dno `V`/`^` | głębokość 3 z pustym dnem = **pułapka** (dowolnej szerokości!) |
+| Teren „za” końcem trasy (za wieżą, pod półką bez powrotu) | nieosiągalny albo śmiertelny (`V`, przepaść) | osiągalny zeskokiem i bez drogi do mety = **pułapka** (poziom 5 miał tak: skok na szczyt słupka `X` sięgającego wiersza 0 — nad mapą jest powietrze!) |
 | Drabina `H` | od podłoża do 1 kafla **ponad** półkę | kończy się równo z półką (nie da się zejść z drabiny) |
 | Szmaragd | ≤ 2 kafle nad miejscem, gdzie da się stać | nad lawą bez platformy |
 | Wrogowie | zombie/slime na płaskim; szkielet/pillager na półkach (strzelają w dół); creeper z miejscem na ucieczkę | creeper w wąskim korytarzu bez wyjścia |
@@ -91,11 +96,11 @@ Lawa i nacieki **nie blokują ruchu** — to „powietrze, które zabija”. Ana
 ```
 BŁĄD Poziom 3 Jaskinia: start 3,18, meta osiągalna: 0/1, pozycji: 204, przedmioty 29/31  NIEOSIĄGALNE: e(145,11) e(149,11)  *** PUŁAPKI (bez wyjścia): (67,12)  UWAGA trudne skoki (1-kaflowy słupek między przepaściami): (62,13)
 ```
-- `meta osiągalna 0/1` → od startu nie da się dojść do `!`/`b`. Uruchom `node gra/analiza.js -v`, znajdź miejsce, gdzie kończą się kropki `·` (osiągalne pozycje) — tam jest za wysoko/za daleko.
+- `meta osiągalna 0/1` → od startu nie da się dojść do `!`/`b`. Uruchom `node gra/analiza.js -v`, znajdź miejsce, gdzie kończą się kropki `·` (powietrze nad osiągalnymi pozycjami stania) — tam jest za wysoko/za daleko albo coś wisi nad trasą skoku.
 - `NIEOSIĄGALNE: e(x,y)` → szmaragd za wysoko (obniż o 1) lub nad przepaścią bez platformy.
-- `PUŁAPKI (x,y)` → gracz może stać w (x, y) [y = wiersz podłoża, stopy na górze kafla y], ale nie ma stamtąd żadnego ruchu. Rozwiązania (w tej kolejności preferencji): **(a)** dno na `^` (`put(x, y, '^')`) lub `V` — śmierć i powrót do checkpointu; **(b)** spłyć do 2 (`put(x, y-1, 'C')`); **(c)** dodaj `_` półkę na ścianie jako stopień. **Nie zamykaj dziury** kaflem na górze — użytkownik chce, by pułapki zostały, ale były uczciwe.
+- `PUŁAPKI (x,y)` → gracz może stać w (x, y) [y = wiersz podłoża, stopy na górze kafla y], ale **nie ma stamtąd drogi do mety** (wpadł i nie wyjdzie — studnia głębsza niż 2, teren bez powrotu). Rozwiązania (w tej kolejności preferencji): **(a)** dno na `^` (`put(x, y, '^')`) lub `V` — śmierć i powrót do checkpointu; **(b)** spłyć do 2 (`put(x, y-1, 'C')`); **(c)** dodaj `_` półkę na ścianie jako stopień; **(d)** jeśli to teren „za trasą” — uniemożliw zeskok (odsuń półkę od ściany) albo zrób go śmiertelnym. **Nie zamykaj dziury** kaflem na górze — użytkownik chce, by pułapki zostały, ale były uczciwe. Wiele pozycji w jednej linii = jeden spójny obszar (napraw wejście do niego, nie każdą pozycję).
 - `UWAGA trudne skoki (x,y)` → to **ostrzeżenie** (kod wyjścia nadal 0): 1-kaflowy słupek ze śmiercią po obu stronach. Jeśli sam go właśnie stworzyłeś — poszerz lądowisko do ≥ 2 kafli albo przesuń przeszkodę. Istniejące ostrzeżenia w Jaskini/Kopalni (półki `_` nad lawą) są celowe.
-- Analizator jest przybliżeniem (nie liczy pędu ani czasu reakcji). Jeśli twierdzi OK, a w grze coś nie wychodzi, sprawdź w przeglądarce (skill `gra-testowanie`, Poziom 2 — skrypt z teleportem i sterowaniem).
+- Analizator ma w sobie **kopię fizyki gracza** (`krok()` w analiza.js) i symuluje każdy skok po pikselach (z każdej klatki rozbiegu, skok pełny i krótki), więc widzi sufity i korony nad trasą lotu. Celowo jest surowszy niż gra: bez coyote time, odrzuca skoki z oknem odbicia < 6 px. Zgodność z silnikiem sprawdza `npm run test:przegladarka` (41 scenariuszy, 100 %). Nie modeluje wrogów, strzał ani ruchu platform w czasie — to sprawdź w przeglądarce (skill `gra-testowanie`). Testy analizatora na syntetycznych mapach: `node gra/test-analiza.js`.
 
 ## Podgląd mapy
 

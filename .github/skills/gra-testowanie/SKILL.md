@@ -5,20 +5,32 @@ description: Testowanie i debugowanie gry oraz strony — npm test, analizator p
 
 # Skill: testowanie i debug
 
-## Poziom 0 — zawsze (2 s, bez przeglądarki)
+## Poziom 0 — zawsze (~10 s, bez przeglądarki)
 
 ```bash
-npm test          # = node gra/test-skladnia.js && node gra/analiza.js && node gra/test-dzwiek.js
+npm test          # = test-skladnia.js && analiza.js && test-analiza.js && test-dzwiek.js
 ```
 Każdy skrypt kończy się linią `WYNIK: …` i kodem 0/1. Czytaj tylko linie `BŁĄD`.
+`test-analiza.js` = testy analizatora na syntetycznych mapach (zasięgi skoku, sufity, studnie, drabiny) **i** na prawdziwych poziomach z cofniętymi znanymi poprawkami (stara półka pod koroną w poziomie 2 → meta nieosiągalna; stare półki przy słupkach w poziomie 5 → pułapka). Nowy błąd poziomu naprawiłeś? Dopisz tam test, który go cofa i oczekuje `BŁĄD`.
 
-## Poziom 1 — smoke test w Chromium (~15 s)
+## Poziom 1 — smoke test w Chromium (~3 min; `--pelna` ~6 min)
 
 ```bash
 npm i -D playwright && npx playwright install chromium   # jednorazowo
 npm run test:przegladarka                                 # sam startuje/zatrzymuje serwer :8765
+node gra/test-przegladarka.js --pelna                     # + wszystkie 41 scenariuszy kalibracji skoku
 ```
-Sprawdza: brak błędów JS na obu stronach, animacja motywu, wczytanie każdego poziomu, stabilne stanie (brak drgania), skok, lawa → śmierć → respawn, dzwon → koniec poziomu, zasięg skoku (płasko 3 TAK / 4 NIE, +2 w górę 2 TAK / 3 NIE — musi zgadzać się z tabelą w analiza.js).
+Sprawdza: brak błędów JS na obu stronach, animacja motywu, wczytanie każdego poziomu, stabilne stanie (brak drgania), skok, lawa → śmierć → respawn, dzwon → koniec poziomu, **kalibracja analizator ↔ silnik** (bot wykonuje w grze scenariusze z `gra/scenariusze-skoku.js` i porównuje z `analizuj()` — musi być 100 % zgodności; po zmianie fizyki w `gra.js` zaktualizuj `krok()` w `analiza.js`), **korytarz na końcu poziomu 2** (bot dochodzi do dzwonu; na starej geometrii utyka).
+Czas gry jest przewijany zegarem Playwright (`page.clock.install()` + `runFor(ms)`), więc 1 s gry trwa ~0,3 s realnie. Uwaga: z zainstalowanym zegarem `waitForTimeout` NIE posuwa gry — używaj `page.clock.runFor()`.
+
+### Bot w grze (do własnych testów sytuacji)
+`test-przegladarka.js` podmienia `window.GRA.wej` tak, że gdy `window.__bot` jest ustawiony, gra czyta klawisze z niego, a `bot.tick()` woła raz na klatkę fizyki (przed ruchem gracza):
+```js
+window.__bot = { prawo: true, skok: false, skokWc: false, tick() { const p = window.GRA.gracz; this.skokWc = false;
+  if (p.naZiemi && p.uderzyl) { this.skok = true; this.skokWc = true; }                   // skacz, gdy uderzysz w ścianę
+  if (p.x > 182 * 16) window.__bot = null; } };                                             // koniec: zdejmij bota
+```
+`skokWc` = „wciśnięto w tej klatce” (bufor skoku), `skok` = „trzymany” (puszczenie skraca skok). Pomocnicze: `window.__poziom(n, mapa?)` (wczytaj poziom n, opcjonalnie z podmienioną mapą — bez wrogów/przedmiotów), `window.__ustaw(kol, wierszPodłoża)` (teleport). Skopiuj ten wzór do własnego skryptu.
 
 ## Poziom 2 — ręczny test konkretnej sytuacji
 
@@ -66,7 +78,8 @@ Klawisze: `ArrowLeft/Right`, `Space`/`ArrowUp` skok, `ArrowUp/Down` drabina, `Es
 | Objaw | Sprawdź |
 | --- | --- |
 | postać drga o 1 px | `ruszY` musi testować `Math.floor((e.y + e.h) / T)` (nie `-1`); skala CSS całkowita w `dopasuj()`; pozycje rysowane przez `Math.round` |
-| gracz utknął w dziurze | `node gra/analiza.js` → `PUŁAPKI`; rozwiązanie w skill `gra-poziomy` (śmiertelne dno lub głębokość ≤ 2) |
+| gracz utknął w dziurze / miejscu bez powrotu | `node gra/analiza.js` → `PUŁAPKI`; rozwiązanie w skill `gra-poziomy` (śmiertelne dno, głębokość ≤ 2, uniemożliwić zeskok) |
+| gracz nie może przejść korytarza (uderza głową / w półkę) | `node gra/analiza.js -v` → gdzie kończą się `·`; coś stałego 1–2 kafle nad podłożem albo 3–4 nad trasą skoku → przesuń/podnieś (skill `gra-poziomy`, reguła 7) |
 | szmaragd nie do zebrania | `NIEOSIĄGALNE: e(x,y)` w analizatorze → obniż o 1 wiersz |
 | wróg spada przez platformę `_` | półki `_` trzymają tylko gdy `stareDol <= ty*T + .5` — wrogowie na półkach muszą startować **na** nich, nie nad |
 | brak dźwięku | `D.start()` wywołany? (klik/klawisz) — konsola: `Dzwiek.aktualna()`; `localStorage['gra-wyciszone']` |

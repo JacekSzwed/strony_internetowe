@@ -3,7 +3,7 @@
   "tasks": [
     {
       "label": "test",
-      "detail": "npm test — składnia, poziomy (osiągalność + pułapki), dźwięk. ~2 s, bez przeglądarki.",
+      "detail": "npm test — składnia, poziomy (osiągalność + pułapki), testy analizatora, dźwięk. ~10 s, bez przeglądarki.",
       "type": "shell",
       "command": "npm test",
       "group": { "kind": "test", "isDefault": true },
@@ -11,15 +11,31 @@
     },
     {
       "label": "test: przegladarka",
-      "detail": "Smoke test w Chromium (Playwright). Sam startuje i zatrzymuje serwer :8765.",
+      "detail": "Smoke test w Chromium (Playwright) + kalibracja analizator↔silnik + korytarz poziomu 2. Sam startuje i zatrzymuje serwer :8765. ~3 min.",
       "type": "shell",
       "command": "npm run test:przegladarka",
       "group": "test",
       "problemMatcher": []
     },
     {
+      "label": "test: przegladarka (pełna kalibracja)",
+      "detail": "Jak wyżej + wszystkie 41 scenariuszy skoku z gra/scenariusze-skoku.js (domyślnie 17 brzegowych). ~6 min.",
+      "type": "shell",
+      "command": "npm run test:przegladarka:pelna",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test: analizator",
+      "detail": "node gra/test-analiza.js — testy analizatora na syntetycznych mapach i regresje prawdziwych poziomów.",
+      "type": "shell",
+      "command": "node gra/test-analiza.js",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
       "label": "test: poziomy",
-      "detail": "node gra/analiza.js — meta, przedmioty, pułapki bez wyjścia.",
+      "detail": "node gra/analiza.js — meta, przedmioty, pułapki (pozycje bez drogi do mety). Mini-silnik = kopia fizyki gracza.",
       "type": "shell",
       "command": "node gra/analiza.js",
       "group": "test",

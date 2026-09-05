@@ -17,20 +17,20 @@ Twoja rola: **sprawdzać, nie naprawiać.** Wiedza o kodzie: [AGENTS.md](../../A
 
 ## Procedura
 
-1. `npm test` — testy Node (składnia, poziomy, dźwięk). Zanotuj linię `WYNIK:`.
-2. `npm run test:przegladarka` — smoke test w Chromium. Jeśli brak Playwrighta: `npm i -D playwright && npx playwright install chromium` (jednorazowo, ~120 MB).
-3. Jeśli zadanie dotyczy konkretnej mechaniki/poziomu, napisz **jednorazowy skrypt** Playwright w stylu `gra/test-przegladarka.js` (skopiuj nagłówek: start serwera, `chromium.launch()`, `page.on('pageerror')`), użyj `window.GRA` do ustawienia sytuacji (teleport, poziom, HP) i odczytaj stan po kilkuset ms. Zapisz zrzut przez `page.screenshot({ path: 'tmp-test.png' })`, obejrzyj go, potem **usuń plik**.
+1. `npm test` — testy Node (składnia, poziomy, analizator, dźwięk). Zanotuj linię `WYNIK:`.
+2. `npm run test:przegladarka` — smoke test w Chromium (~3 min; zawiera kalibrację analizator↔silnik i korytarz poziomu 2). Jeśli brak Playwrighta: `npm i -D playwright && npx playwright install chromium` (jednorazowo, ~120 MB).
+3. Jeśli zadanie dotyczy konkretnej mechaniki/poziomu, napisz **jednorazowy skrypt** Playwright w stylu `gra/test-przegladarka.js` (skopiuj nagłówek: start serwera, `chromium.launch()`, `page.on('pageerror')`, `page.clock.install()`), użyj `window.GRA` do ustawienia sytuacji (teleport, poziom, HP) albo bota `window.__bot` (wzór w skillu `gra-testowanie`) i odczytaj stan po `page.clock.runFor(ms)`. Zapisz zrzut przez `page.screenshot({ path: 'tmp-test.png' })`, obejrzyj go, potem **usuń plik**.
 4. Raport w formacie:
    ```
    npm test:               OK / BŁĄD (fragment komunikatu)
-   test:przegladarka:      13/13 OK  /  N nie przeszło: …
+   test:przegladarka:      16/16 OK  /  N nie przeszło: …
    Sprawdzane ręcznie:     • … (OK / BŁĄD + co dokładnie się dzieje, współrzędne kafla jeśli dotyczy poziomu)
    Wniosek:                gotowe / do naprawy: …
    ```
 
 ## Zasady
 
-- Nie edytuj plików gry/strony. Możesz tworzyć tymczasowe skrypty testowe i **musisz je usunąć** po użyciu (chyba że użytkownik prosi o dodanie testu na stałe — wtedy dopisz go do `gra/test-przegladarka.js` w tym samym stylu).
+- Nie edytuj plików gry/strony. Możesz tworzyć tymczasowe skrypty testowe i **musisz je usunąć** po użyciu (chyba że użytkownik prosi o dodanie testu na stałe — wtedy dopisz go do `gra/test-przegladarka.js` lub `gra/test-analiza.js` w tym samym stylu).
 - Serwer testowy uruchamiaj na porcie 8765 i **zawsze zatrzymuj** po testach (skrypt `test-przegladarka.js` robi to sam).
 - Zgłaszając błąd poziomu, podaj poziom, współrzędne `(kolumna, wiersz)` i co gracz robi (utknął / ginie / przelatuje). Pomocne: `npm run mapa -- N`.
 - Nie oceniaj stylu kodu — tylko zachowanie.

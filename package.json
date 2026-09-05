@@ -5,11 +5,13 @@
   "description": "Strona 'opis postaci steve' (Minecraft 2D, 8-bit) + gra platformowa 'Emeryk i Skradziony Dzwon'. Zero zależności w runtime — czysty HTML/CSS/JS.",
   "scripts": {
     "start": "python -m http.server 8765 --bind 127.0.0.1",
-    "test": "node gra/test-skladnia.js && node gra/analiza.js && node gra/test-dzwiek.js",
+    "test": "node gra/test-skladnia.js && node gra/analiza.js && node gra/test-analiza.js && node gra/test-dzwiek.js",
     "test:poziomy": "node gra/analiza.js",
+    "test:analiza": "node gra/test-analiza.js",
     "test:dzwiek": "node gra/test-dzwiek.js",
     "test:skladnia": "node gra/test-skladnia.js",
     "test:przegladarka": "node gra/test-przegladarka.js",
+    "test:przegladarka:pelna": "node gra/test-przegladarka.js --pelna",
     "mapa": "node gra/analiza.js --mapa"
   },
   "devDependencies": {

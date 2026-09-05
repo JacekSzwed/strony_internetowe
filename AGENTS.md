@@ -19,14 +19,15 @@ Styl: zwięzły, jednolinijkowe `if`, bez semikolonowej pedanterii; komentarze t
 ## 2. Jak uruchomić i sprawdzić (ZAWSZE przed oddaniem zmian)
 
 ```bash
-npm test                      # składnia + struktura poziomów + osiągalność/pułapki + dźwięk (Node, ~2 s, bez przeglądarki)
-npm run test:przegladarka     # smoke test w Chromium (wymaga: npm i -D playwright && npx playwright install chromium)
+npm test                      # składnia + struktura poziomów + osiągalność/pułapki + testy analizatora + dźwięk (Node, ~10 s, bez przeglądarki)
+npm run test:przegladarka     # smoke test w Chromium (wymaga: npm i -D playwright && npx playwright install chromium); --pelna = pełna kalibracja skoków
 npm start                     # serwer http://127.0.0.1:8765  (python -m http.server) — otwórz index.html lub gra.html
 npm run mapa -- 3             # wypisz mapę poziomu 3 z numeracją kolumn (do projektowania poziomów)
 ```
 
 Kod wyjścia ≠ 0 = coś jest źle; komunikat mówi co. **Nie commituj, gdy `npm test` nie przechodzi.**
 Po zmianie w `gra/poziomy.js` zawsze `node gra/analiza.js`. Po zmianie w `gra/dzwiek.js` zawsze `node gra/test-dzwiek.js`.
+Po zmianie fizyki gracza w `gra/gra.js` (stałe, `ruszX/ruszY`, `aktualizujGracza`) **skopiuj zmianę do mini-silnika w `gra/analiza.js` (`krok()`)** i uruchom `npm run test:przegladarka` — test kalibracji musi dać 100 % zgodności.
 
 Debug w przeglądarce: gra wystawia `window.GRA` (patrz §6) — można teleportować gracza, zmienić poziom, odczytać stan.
 
@@ -41,7 +42,8 @@ gra/dzwiek.js       Web Audio: SFX + sekwencer muzyki (utwory w tekście) → wi
 gra/grafika.js      tekstury kafli, sprite'y, tła parallax, definicje kafli KAFLE → window.Grafika
 gra/poziomy.js      5 poziomów budowanych funkcjami pomocniczymi        → window.POZIOMY
 gra/gra.js          silnik: stan, fizyka, wrogowie, rysowanie, ekrany  → window.GRA (debug)
-gra/analiza.js      narzędzie: BFS osiągalności + detektor pułapek (node)
+gra/analiza.js      narzędzie: BFS osiągalności z MINI-SILNIKIEM (kopia fizyki gracza) + detektor pułapek (node); eksportuje analizuj()
+gra/scenariusze-skoku.js  wspólne syntetyczne scenariusze skoku (dla test-analiza i kalibracji w test-przegladarka)
 gra/test-*.js       testy uruchamiane przez npm test / test:przegladarka
 README.md           dokumentacja dla ludzi (szczegółowa)
 .github/            agenci, skille, prompty, instrukcje dla AI
@@ -54,13 +56,15 @@ Kolejność ładowania w `gra.html` jest ważna: `czcionka → dzwiek → grafik
 - Rozdzielczość logiczna **320×180**, kafel **T = 16 px**, skala CSS zawsze całkowita (`dopasuj()` w gra.js) — inaczej sprite'y migoczą.
 - Pętla: stały krok **60 Hz** (`aktualizuj()`), rysowanie co klatkę (`rysuj()`); maks. 4 kroki na klatkę.
 - Fizyka (gra.js linie ~9): `GRAW=.28`, `MAX_SPAD=5`, `SKOK=-5`, `PREDKOSC=1.65`. Gracz `w=10, h=21`.
-  **Zasięg skoku ZMIERZONY w silniku** (liczba pustych kafli przerwy, którą da się przeskoczyć, zależnie od różnicy wysokości lądowania):
+  **Zasięg skoku ZMIERZONY w silniku i potwierdzony kalibracją analizator↔silnik** (liczba pustych kafli przerwy, którą da się przeskoczyć bez „pixel-perfect”, zależnie od różnicy wysokości lądowania):
 
-  | lądowanie | +2 w górę | +1 | 0 (płasko) | −1 | −2 i niżej |
-  | --- | --- | --- | --- | --- | --- |
-  | maks. przerwa | **2** | **3** | **3** | **3** | **4** |
+  | lądowanie | +2 w górę | +1 | 0 (płasko) | −1 i niżej |
+  | --- | --- | --- | --- | --- |
+  | maks. przerwa | **2** | **3** | **3** | **4** |
 
   Wyższe ściany niż 2 kafle = nie da się wyjść → to jest pułapka. Odbicie z 1-kaflowego słupka między przepaściami jest wykonalne, ale frustrujące — analizator ostrzega (`UWAGA trudne skoki`).
+  **Trasa lotu też się liczy**: głowa sięga 2,6 kafla nad stopy w 1.–2. kolumnie za krawędzią. Sufit/korona drzewa/półka 3 lub 4 kafle nad podłożem w pierwszych 3 kolumnach przerwy blokuje skok przez 3 kafle (5 nad podłożem już nie). Półka nad korytarzem, po którym się chodzi, musi być **≥ 3 kafle nad podłożem** (ciało = 2 kafle) — inaczej blokuje przejście.
+  Nad i pod mapą jest **powietrze** (`kafel()` zwraca `' '`) — na ścianie/słupku sięgającym wiersza 0 **można stanąć** (poziom 5 miał tak pułapkę: zeskok za wieżę bez powrotu).
 - Coyote time 6 klatek, bufor skoku 7 klatek, skok zmienny (puszczenie klawisza obcina `vy` do −1.8).
 - Kolizje kafelkowe: `ruszX` / `ruszY` (wspólne dla gracza i wrogów). `ruszY` sprawdza kafel **przy `e.y+e.h`** (krawędź stóp) — nie zmieniaj na `-1`, bo wraca drganie postaci.
 - Współrzędne: `x,y` to lewy-górny róg hitboxa w px świata; `kafel(tx,ty)` zwraca znak mapy; `P.k[y][x]` to mapa (tablica tablic znaków, byty już usunięte → `' '`).
@@ -113,11 +117,12 @@ Walidacja na końcu pliku loguje `console.error` przy braku `@` / `!`.
 
 **Reguły projektowe poziomów (obowiązkowe):**
 1. Zasięg skoku wg tabeli w §4: przerwa ≤ 3 kafle na płasko/+1, **≤ 2 przy lądowaniu +2 w górę**, ≤ 4 przy spadaniu. Drabina musi sięgać 1 kafel **ponad** półkę, na którą prowadzi.
-2. Żadna dziura głębsza niż 2 kafle z pionowymi ścianami po obu stronach — chyba że na dnie jest `V` lub `^` (śmierć + powrót do checkpointu). **Nie zamykaj takich dziur — zrób je śmiertelnymi lub płytszymi (≤2).**
+2. Żadna dziura głębsza niż 2 kafle z pionowymi ścianami po obu stronach — chyba że na dnie jest `V` lub `^` (śmierć + powrót do checkpointu). **Nie zamykaj takich dziur — zrób je śmiertelnymi lub płytszymi (≤2).** Dotyczy też „dziur” szerokich (cały teren bez powrotu, np. za wieżą) — analizator zgłasza je jako `PUŁAPKI`.
 3. **Lądowisko i miejsce odbicia ≥ 2 kafle szerokości**, jeśli po obu stronach jest śmierć (lawa/przepaść). 1-kaflowe słupki między przepaściami tylko celowo, w późnych poziomach, i nigdy dwa pod rząd. Analizator wypisuje je jako `UWAGA trudne skoki`.
-4. Po każdej zmianie: `node gra/analiza.js` musi dać `WYNIK: wszystkie poziomy OK` (0 pułapek, meta i 100% przedmiotów osiągalne). Analizator jest **przybliżeniem** (nie liczy pędu ani czasu reakcji) — trudne miejsca sprawdź w przeglądarce (skill `gra-testowanie`).
+4. Po każdej zmianie: `node gra/analiza.js` musi dać `WYNIK: wszystkie poziomy OK` (0 pułapek, meta i 100% przedmiotów osiągalne). Analizator symuluje prawdziwą fizykę gracza (kopia `gra.js`: hitbox, grawitacja, kolizje, krótki skok; bez coyote time i bez skoków wymagających okna < 6 px) i jest **skalibrowany z silnikiem** (`test:przegladarka` — 41 scenariuszy skoku, w tym sufity). Nie modeluje wrogów, strzał ani ruchu platform w czasie — to sprawdź w przeglądarce (skill `gra-testowanie`).
 5. Checkpoint `f` co ~60–80 kafli. Poziom kończy się `meta(x, wierszPodłoża)`.
 6. Nie stawiaj nowej przeszkody bezpośrednio za istniejącą (np. lawy tuż za `dziura()`), bo tworzy to ciąg skoków bez miejsca na wylądowanie. Między dwoma skokami zostaw ≥ 2 kafle płaskiego podłoża.
+7. **Nic 1–2 kafle nad korytarzem**, po którym się chodzi (półka `rzad(...)`, liście `l`, belka) — ciało gracza ma 2 kafle, więc to ściana. Półki ze szmaragdami nad ścieżką stawiaj ≥ 3 kafle nad podłożem i wchodź na nie z pagórka/schodów. Nie wsuwaj półek pod korony drzew (`drzewo()` zajmuje `y-h-3 .. y-h` w promieniu `r`).
 
 ## 6. API debugowe `window.GRA` (gra.js, ostatnia linia)
 
@@ -137,7 +142,7 @@ Obiekty wroga: `{typ, x,y,w,h, vx,vy, dir, naZiemi, hp, t, anim, lont(-1 = nie s
 | Chcę… | Plik → funkcja |
 | --- | --- |
 | dodać poziom | `gra/poziomy.js` → nowy blok `(() => { nowy(); ...; POZIOMY.push({...}) })()` przed `window.POZIOMY`; motyw tła w `grafika.js → rysujTlo()`; `NIEBO[motyw]` |
-| zmienić fizykę | `gra/gra.js` → stałe na górze (`GRAW`, `SKOK`, …) i `aktualizujGracza()` |
+| zmienić fizykę | `gra/gra.js` → stałe na górze (`GRAW`, `SKOK`, …) i `aktualizujGracza()`; **tę samą zmianę** w `gra/analiza.js → krok()` (mini-silnik), potem `npm run test:przegladarka` (kalibracja) i ewent. tabela zasięgów w §4 |
 | nowy wróg | `gra.js → nowyWrog()` (hitbox, v, hp) + `aktualizujWroga()` (case AI) + `sprWroga()`/`rysujWroga()` + `koloryWroga()`; sprite w `grafika.js` (tablica wierszy + paleta przez `sprite()`), eksport w `window.Grafika`; znak w `wczytajPoziom()`; dopisz znak do „znane” w `gra/test-skladnia.js` |
 | nowy przedmiot | `wczytajPoziom()` (case) + `aktualizujGracza()` (pętla po `P.przedmioty`) + `rysujSwiat()`; sprite w grafika.js |
 | nowy kafel | `grafika.js → KAFLE` (+ `tekstura()` case, jeśli ma teksturę) + ewent. `gra/analiza.js → STALE` i `test-skladnia.js` „znane” |
@@ -185,6 +190,8 @@ Muzyka gra **tylko w grze** (nie na stronie). `D.start()` musi zostać wywołane
 - `ruszY` sprawdza `e.y+e.h` (nie `-1`) — celowo, eliminuje drganie.
 - Skala canvasu tylko całkowita — celowo (piksel-perfect).
 - `^` i `V` zabijają natychmiast — celowo, żeby nie było studni bez wyjścia.
+- Nad mapą jest powietrze (`kafel()` → `' '` dla `ty < 0`) — celowo, jak w Mario; projektuj poziomy tak, żeby ze szczytu ściany nie dało się spaść w miejsce bez powrotu.
+- Analizator odrzuca skoki z oknem odbicia < 6 px i nie używa coyote time — celowo (dzieci); silnik jest łaskawszy niż analizator, nigdy odwrotnie.
 - Pnie drzew `L`, tory `=` i słupki `|` nie blokują — celowo (tło).
 - Creeper po skoku na głowę **nie ginie**, tylko odpala lont (0.45 s) — celowo, trzeba uciec.
 - Boss: 3 trafienia w głowę, `ranny` = 90 klatek nietykalności, odrzut gracza po trafieniu — celowo.
