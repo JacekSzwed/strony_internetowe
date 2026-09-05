@@ -1,0 +1,108 @@
+name: Wdrożenie strony
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.wdrozenie.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Przygotuj pliki strony
+        run: |
+          node - <<'EOF'
+          const fs = require('fs')
+          const path = require('path')
+          const repo = process.cwd()
+          const dist = 'dist'
+          const distRoot = path.resolve(dist)
+          const publikowanePliki = [
+            'index.html',
+            'gra.html',
+            'swiat.js',
+            'z4xmg666.jpg',
+            'gra/czcionka.js',
+            'gra/dzwiek.js',
+            'gra/grafika.js',
+            'gra/poziomy.js',
+            'gra/gra.js',
+            'gra/analiza.js',
+            'gra/scenariusze-skoku.js'
+          ]
+          fs.rmSync(dist, { recursive: true, force: true })
+          fs.mkdirSync(dist, { recursive: true })
+          const wSrodku = (bazowy, pelny) => pelny === bazowy || pelny.startsWith(bazowy + path.sep)
+          const rozwiazRepo = rel => {
+            const pelny = path.resolve(repo, rel)
+            if (!wSrodku(repo, pelny)) throw new Error(`Niedozwolona ścieżka poza repozytorium: ${rel}`)
+            return pelny
+          }
+          const kopiuj = rel => {
+            const src = rozwiazRepo(rel)
+            const dst = path.resolve(distRoot, rel)
+            if (!wSrodku(distRoot, dst)) throw new Error(`Niedozwolona ścieżka poza artefaktem: ${rel}`)
+            fs.mkdirSync(path.dirname(dst), { recursive: true })
+            fs.copyFileSync(src, dst)
+          }
+          for (const plik of publikowanePliki) kopiuj(plik)
+          EOF
+      - name: Sprawdź lokalne zasoby HTML
+        run: |
+          node - <<'EOF'
+          const fs = require('fs')
+          const path = require('path')
+          const distRoot = path.resolve('dist')
+          const htmlPliki = ['index.html', 'gra.html']
+          const attr = /\b(?:src|href)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/g
+          const pomin = /^(https?:|data:|#|mailto:|tel:)/
+          const wSrodku = (bazowy, pelny) => pelny === bazowy || pelny.startsWith(bazowy + path.sep)
+          for (const nazwa of htmlPliki) {
+            const pelna = path.resolve(distRoot, nazwa)
+            const katalogHtml = path.dirname(pelna)
+            const html = fs.readFileSync(pelna, 'utf8')
+            for (const dopasowanie of html.matchAll(attr)) {
+              const rel = (dopasowanie[1] || dopasowanie[2] || dopasowanie[3] || '').split('?')[0]
+              if (!rel || pomin.test(rel)) continue
+              const cel = path.resolve(katalogHtml, rel)
+              if (!wSrodku(distRoot, cel)) throw new Error(`Niedozwolona ścieżka poza artefaktem: ${rel} (z ${nazwa})`)
+              if (!fs.existsSync(cel)) throw new Error(`Brak pliku w artefakcie: ${rel} (z ${nazwa})`)
+            }
+          }
+          console.log('OK: wszystkie lokalne zasoby HTML są w artefakcie')
+          EOF
+      - name: Wgraj artefakt Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Opublikuj w GitHub Pages
+        id: wdrozenie
+        uses: actions/deploy-pages@v4
