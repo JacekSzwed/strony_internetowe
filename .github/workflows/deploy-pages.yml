@@ -42,8 +42,17 @@ jobs:
           const dist = 'dist'
           const distRoot = path.resolve(dist)
           const htmlPliki = ['index.html', 'gra.html']
-          const attr = /\b(?:src|href)=["']([^"']+)["']/g
-          const pomin = /^(https?:|data:|#|mailto:|tel:)/
+          const publikowanePliki = [
+            'index.html',
+            'gra.html',
+            'swiat.js',
+            'z4xmg666.jpg',
+            'gra/czcionka.js',
+            'gra/dzwiek.js',
+            'gra/grafika.js',
+            'gra/poziomy.js',
+            'gra/gra.js'
+          ]
           fs.rmSync(dist, { recursive: true, force: true })
           fs.mkdirSync(dist, { recursive: true })
           const wSrodku = (bazowy, pelny) => pelny === bazowy || pelny.startsWith(bazowy + path.sep)
@@ -59,15 +68,7 @@ jobs:
             fs.mkdirSync(path.dirname(dst), { recursive: true })
             fs.copyFileSync(src, dst)
           }
-          for (const nazwa of htmlPliki) kopiuj(nazwa)
-          for (const nazwa of htmlPliki) {
-            const html = fs.readFileSync(nazwa, 'utf8')
-            for (const dopasowanie of html.matchAll(attr)) {
-              const rel = dopasowanie[1].split('?')[0]
-              if (!rel || pomin.test(rel)) continue
-              kopiuj(rel)
-            }
-          }
+          for (const plik of publikowanePliki) kopiuj(plik)
           EOF
       - name: Sprawdź lokalne zasoby HTML
         run: |
@@ -86,7 +87,7 @@ jobs:
               const rel = dopasowanie[1].split('?')[0]
               if (!rel || pomin.test(rel)) continue
               const cel = path.resolve(distRoot, rel)
-              if (!wSrodku(distRoot, cel)) throw new Error(`Niedozwolana ścieżka poza artefaktem: ${rel} (z ${nazwa})`)
+              if (!wSrodku(distRoot, cel)) throw new Error(`Niedozwolona ścieżka poza artefaktem: ${rel} (z ${nazwa})`)
               if (!fs.existsSync(cel)) throw new Error(`Brak pliku w artefakcie: ${rel} (z ${nazwa})`)
             }
           }
