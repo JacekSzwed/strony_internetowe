@@ -38,6 +38,26 @@ jobs:
           mkdir -p dist/gra
           cp index.html gra.html swiat.js z4xmg666.jpg dist/
           cp gra/czcionka.js gra/dzwiek.js gra/grafika.js gra/poziomy.js gra/gra.js dist/gra/
+      - name: Sprawdź lokalne zasoby HTML
+        run: |
+          node - <<'EOF'
+          const fs = require('fs')
+          const path = require('path')
+          const htmlPliki = ['index.html', 'gra.html']
+          const attr = /\b(?:src|href)=["']([^"']+)["']/g
+          const pomin = /^(https?:|data:|#|mailto:|tel:)/
+          for (const nazwa of htmlPliki) {
+            const pelna = path.join('dist', nazwa)
+            const html = fs.readFileSync(pelna, 'utf8')
+            for (const dopasowanie of html.matchAll(attr)) {
+              const rel = dopasowanie[1].split('?')[0]
+              if (!rel || pomin.test(rel)) continue
+              const cel = path.join('dist', rel)
+              if (!fs.existsSync(cel)) throw new Error(`Brak pliku w artefakcie: ${rel} (z ${nazwa})`)
+            }
+          }
+          console.log('OK: wszystkie lokalne zasoby HTML są w artefakcie')
+          EOF
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
