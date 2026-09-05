@@ -85,11 +85,12 @@ jobs:
           const wSrodku = (bazowy, pelny) => pelny === bazowy || pelny.startsWith(bazowy + path.sep)
           for (const nazwa of htmlPliki) {
             const pelna = path.resolve(distRoot, nazwa)
+            const katalogHtml = path.dirname(pelna)
             const html = fs.readFileSync(pelna, 'utf8')
             for (const dopasowanie of html.matchAll(attr)) {
               const rel = dopasowanie[1].split('?')[0]
               if (!rel || pomin.test(rel)) continue
-              const cel = path.resolve(distRoot, rel)
+              const cel = path.resolve(katalogHtml, rel)
               if (!wSrodku(distRoot, cel)) throw new Error(`Niedozwolona ścieżka poza artefaktem: ${rel} (z ${nazwa})`)
               if (!fs.existsSync(cel)) throw new Error(`Brak pliku w artefakcie: ${rel} (z ${nazwa})`)
             }
