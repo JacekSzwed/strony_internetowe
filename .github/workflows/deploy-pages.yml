@@ -80,7 +80,7 @@ jobs:
           const path = require('path')
           const distRoot = path.resolve('dist')
           const htmlPliki = ['index.html', 'gra.html']
-          const attr = /\b(?:src|href)=["']([^"']+)["']/g
+          const attr = /\b(?:src|href)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/g
           const pomin = /^(https?:|data:|#|mailto:|tel:)/
           const wSrodku = (bazowy, pelny) => pelny === bazowy || pelny.startsWith(bazowy + path.sep)
           for (const nazwa of htmlPliki) {
@@ -88,7 +88,7 @@ jobs:
             const katalogHtml = path.dirname(pelna)
             const html = fs.readFileSync(pelna, 'utf8')
             for (const dopasowanie of html.matchAll(attr)) {
-              const rel = dopasowanie[1].split('?')[0]
+              const rel = (dopasowanie[1] || dopasowanie[2] || dopasowanie[3] || '').split('?')[0]
               if (!rel || pomin.test(rel)) continue
               const cel = path.resolve(katalogHtml, rel)
               if (!wSrodku(distRoot, cel)) throw new Error(`Niedozwolona ścieżka poza artefaktem: ${rel} (z ${nazwa})`)
