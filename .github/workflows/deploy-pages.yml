@@ -37,7 +37,12 @@ jobs:
         run: |
           mkdir -p dist/gra
           cp index.html gra.html swiat.js z4xmg666.jpg dist/
-          cp gra/czcionka.js gra/dzwiek.js gra/grafika.js gra/poziomy.js gra/gra.js dist/gra/
+          for plik in gra/*.js; do
+            case "$plik" in
+              gra/test-*.js) continue ;;
+            esac
+            cp "$plik" dist/gra/
+          done
       - name: Sprawdź lokalne zasoby HTML
         run: |
           node - <<'EOF'
