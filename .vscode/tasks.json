@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "test",
+      "detail": "npm test — składnia, poziomy (osiągalność + pułapki), dźwięk. ~2 s, bez przeglądarki.",
+      "type": "shell",
+      "command": "npm test",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "test: przegladarka",
+      "detail": "Smoke test w Chromium (Playwright). Sam startuje i zatrzymuje serwer :8765.",
+      "type": "shell",
+      "command": "npm run test:przegladarka",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test: poziomy",
+      "detail": "node gra/analiza.js — meta, przedmioty, pułapki bez wyjścia.",
+      "type": "shell",
+      "command": "node gra/analiza.js",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "test: poziomy (mapa osiągalności)",
+      "detail": "node gra/analiza.js -v — mapy z kropkami · na osiągalnych pozycjach.",
+      "type": "shell",
+      "command": "node gra/analiza.js -v",
+      "problemMatcher": []
+    },
+    {
+      "label": "mapa poziomu",
+      "detail": "Wypisz mapę poziomu z numeracją kolumn i wierszy.",
+      "type": "shell",
+      "command": "node gra/analiza.js --mapa ${input:numerPoziomu}",
+      "problemMatcher": []
+    },
+    {
+      "label": "serwer",
+      "detail": "python -m http.server 8765 — otwórz http://127.0.0.1:8765/index.html lub /gra.html",
+      "type": "shell",
+      "command": "python -m http.server 8765 --bind 127.0.0.1",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "dedicated" }
+    },
+    {
+      "label": "playwright: instaluj",
+      "detail": "Jednorazowo: npm i -D playwright && npx playwright install chromium (~120 MB)",
+      "type": "shell",
+      "command": "npm i -D playwright && npx playwright install chromium",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    { "id": "numerPoziomu", "type": "promptString", "description": "Numer poziomu (1–5)", "default": "1" }
+  ]
+}

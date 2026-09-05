@@ -1,0 +1,18 @@
+{
+  "name": "strony-internetowe-steve",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Strona 'opis postaci steve' (Minecraft 2D, 8-bit) + gra platformowa 'Emeryk i Skradziony Dzwon'. Zero zależności w runtime — czysty HTML/CSS/JS.",
+  "scripts": {
+    "start": "python -m http.server 8765 --bind 127.0.0.1",
+    "test": "node gra/test-skladnia.js && node gra/analiza.js && node gra/test-dzwiek.js",
+    "test:poziomy": "node gra/analiza.js",
+    "test:dzwiek": "node gra/test-dzwiek.js",
+    "test:skladnia": "node gra/test-skladnia.js",
+    "test:przegladarka": "node gra/test-przegladarka.js",
+    "mapa": "node gra/analiza.js --mapa"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}
