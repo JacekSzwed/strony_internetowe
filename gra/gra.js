@@ -533,6 +533,11 @@ function rysujSwiat() {
   const wst = gra.wstrzas > 0 ? (Math.random() - .5) * gra.wstrzas * .6 : 0;
   const cx = Math.round(kamera.x + wst), cy = Math.round(kamera.y + wst * .5);
   G.rysujTlo(g, P.def.motyw, W, H, kamera.x, kamera.y, gra.t, (P.wys - 2) * T - kamera.y);
+  for (const [x0, y0, x1, y1, k1, k2] of P.def.tlo || []) {           // tylne ściany budowli
+    const x = x0 * T - cx, y = y0 * T - cy, w = (x1 - x0 + 1) * T, h = (y1 - y0 + 1) * T;
+    g.fillStyle = k1; g.fillRect(x, y, w, h);
+    g.fillStyle = k2; for (let yy = 0; yy < h; yy += 4) g.fillRect(x, y + yy, w, 1);
+  }
   rysujKafle(cx, cy);
   for (const pl of P.platformy) g.drawImage(G.PLATFORMA, Math.round(pl.x - cx), Math.round(pl.y - cy));
   for (const o of P.ogniska) g.drawImage(o.aktywne ? G.OGNISKO[(P.t * 8 | 0) % 2] : G.OGNISKO_ZGASZONE, Math.round(o.x - cx), Math.round(o.y - cy + (o.aktywne ? 0 : 6)));

@@ -314,6 +314,7 @@ const POZIOMY = [];
     opis: 'Noc. Przed tobą wieża posterunku. Na jej szczycie Kapitan Pillagerów strzeże skradzionego dzwonu.',
     npc: { 8: 'Wspinaj się po drabinach na sam szczyt wieży. Kapitan jest twardy — skocz mu na głowę trzy razy!' },
     dzwonPoBossie: { x: wx + 8, y: 3 },
+    tlo: [[L, 5, R, 25, '#1E140C', '#2A1D12']],                         // tylna ściana wieży
   });
 })();
 
