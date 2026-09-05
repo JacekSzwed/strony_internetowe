@@ -705,8 +705,8 @@ function rysujTytul() {
   C.tekst(g, 'i Skradziony Dzwon', W / 2, 52, '#FFFFFF', { wyr: 'srodek', cien: '#000' });
   const opcje = opcjeMenu();
   opcje.forEach((o, i) => przyciskMenu(W / 2 - 70, 72 + i * 17, 140, o.n, i === gra.menu));
-  if (gra.rekord > 0) C.tekst(g, 'Rekord: ' + gra.rekord + ' szmaragdów', W / 2, H - 12, '#B4FFD0', { wyr: 'srodek', cien: '#000' });
-  C.tekst(g, '♥ Kurczak z lawy', 232, zy + 22, '#FFB347', { wyr: 'srodek', cien: '#000' });
+  if (gra.rekord > 0) C.tekst(g, 'Rekord: ' + gra.rekord + ' szmaragdów', W - 4, 4, '#B4FFD0', { wyr: 'prawo', cien: '#000' });
+  C.tekst(g, '♥ Kurczak z lawy', 256, zy + 22, '#FFB347', { wyr: 'srodek', cien: '#000' });
 }
 function rysujSterowanie() {
   G.rysujTlo(g, 'las', W, H, gra.t * 4, 0, gra.t);

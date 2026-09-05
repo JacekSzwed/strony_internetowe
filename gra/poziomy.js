@@ -53,6 +53,7 @@ const POZIOMY = [];
   ziemia(0, 159, 12);
   sciany();
   put(3, 11, '@');
+  put(6, 11, 'h');
   put(9, 11, 'j');
   schody(12, 12, 3);                                                 // 3 stopnie na dach domu
   dom(15, 12, 8, 4);
