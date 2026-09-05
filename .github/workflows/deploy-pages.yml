@@ -22,6 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - run: npm ci
       - run: npm test
 
   deploy:
@@ -41,7 +42,6 @@ jobs:
           const repo = process.cwd()
           const dist = 'dist'
           const distRoot = path.resolve(dist)
-          const htmlPliki = ['index.html', 'gra.html']
           const publikowanePliki = [
             'index.html',
             'gra.html',
