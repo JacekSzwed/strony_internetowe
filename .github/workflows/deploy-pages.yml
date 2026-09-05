@@ -38,15 +38,24 @@ jobs:
           node - <<'EOF'
           const fs = require('fs')
           const path = require('path')
+          const repo = process.cwd()
           const dist = 'dist'
+          const distRoot = path.resolve(dist)
           const htmlPliki = ['index.html', 'gra.html']
           const attr = /\b(?:src|href)=["']([^"']+)["']/g
           const pomin = /^(https?:|data:|#|mailto:|tel:)/
           fs.rmSync(dist, { recursive: true, force: true })
           fs.mkdirSync(dist, { recursive: true })
+          const wSrodku = (bazowy, pelny) => pelny === bazowy || pelny.startsWith(bazowy + path.sep)
+          const rozwiazRepo = rel => {
+            const pelny = path.resolve(repo, rel)
+            if (!wSrodku(repo, pelny)) throw new Error(`Niedozwolona ścieżka poza repozytorium: ${rel}`)
+            return pelny
+          }
           const kopiuj = rel => {
-            const src = path.normalize(rel)
-            const dst = path.join(dist, src)
+            const src = rozwiazRepo(rel)
+            const dst = path.resolve(distRoot, rel)
+            if (!wSrodku(distRoot, dst)) throw new Error(`Niedozwolona ścieżka poza artefaktem: ${rel}`)
             fs.mkdirSync(path.dirname(dst), { recursive: true })
             fs.copyFileSync(src, dst)
           }
@@ -65,16 +74,19 @@ jobs:
           node - <<'EOF'
           const fs = require('fs')
           const path = require('path')
+          const distRoot = path.resolve('dist')
           const htmlPliki = ['index.html', 'gra.html']
           const attr = /\b(?:src|href)=["']([^"']+)["']/g
           const pomin = /^(https?:|data:|#|mailto:|tel:)/
+          const wSrodku = (bazowy, pelny) => pelny === bazowy || pelny.startsWith(bazowy + path.sep)
           for (const nazwa of htmlPliki) {
-            const pelna = path.join('dist', nazwa)
+            const pelna = path.resolve(distRoot, nazwa)
             const html = fs.readFileSync(pelna, 'utf8')
             for (const dopasowanie of html.matchAll(attr)) {
               const rel = dopasowanie[1].split('?')[0]
               if (!rel || pomin.test(rel)) continue
-              const cel = path.join('dist', rel)
+              const cel = path.resolve(distRoot, rel)
+              if (!wSrodku(distRoot, cel)) throw new Error(`Niedozwolana ścieżka poza artefaktem: ${rel} (z ${nazwa})`)
               if (!fs.existsSync(cel)) throw new Error(`Brak pliku w artefakcie: ${rel} (z ${nazwa})`)
             }
           }
