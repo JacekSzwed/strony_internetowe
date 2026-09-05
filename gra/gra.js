@@ -6,7 +6,7 @@
 const G = window.Grafika, C = window.Czcionka, D = window.Dzwiek;
 const { T, TEX, KAFLE } = G;
 const W = 320, H = 180;
-const GRAW = .28, MAX_SPAD = 5, SKOK = -4.9, PREDKOSC = 1.55;
+const GRAW = .28, MAX_SPAD = 5, SKOK = -5, PREDKOSC = 1.65;
 
 const canvas = document.getElementById('gra');
 const g = canvas.getContext('2d');
@@ -100,13 +100,13 @@ function wczytajPoziom(nr, zachowaj) {
       case 'a': if (!P.zebrane.has(id)) P.przedmioty.push({ typ: 'jablko', id, x: px + 4, y: py + 4, w: 8, h: 8, faza: 0 }); break;
       case 'o': if (!P.zebrane.has(id)) P.przedmioty.push({ typ: 'totem', id, x: px + 4, y: py + 3, w: 8, h: 10, faza: 0 }); break;
       case 'f': P.ogniska.push({ x: px, y: py + T - 10, w: 16, h: 10, aktywne: P.checkpoint && P.checkpoint.id === id, id }); break;
-      case '!': P.dzwon = { x: px + 2, y: py, w: 12, h: 11, kat: 0, v: 0 }; break;
+      case '!': P.dzwon = { x: px + 2, y: py, w: 12, h: 20, kat: 0, v: 0 }; break;
       case 'm': P.platformy.push({ x0: px - 8, y0: py, x: px - 8, y: py, w: 32, h: 8, typ: 'm', A: 40, om: .8 + ((x * 13) % 5) * .1, f: x }); break;
       case 'n': P.platformy.push({ x0: px - 8, y0: py, x: px - 8, y: py, w: 32, h: 8, typ: 'n', A: 44, om: .7 + ((x * 7) % 5) * .1, f: x }); break;
       case 'h': P.npc.push({ x: px + 3, y: py + T - 10, w: 10, h: 10, kurczak: true, dir: 1 }); break;
     }
   }
-  if (P.bossPokonany && def.dzwonPoBossie) P.dzwon = { x: def.dzwonPoBossie.x * T + 2, y: def.dzwonPoBossie.y * T, w: 12, h: 11, kat: 0, v: 0 };
+  if (P.bossPokonany && def.dzwonPoBossie) P.dzwon = { x: def.dzwonPoBossie.x * T + 2, y: def.dzwonPoBossie.y * T, w: 12, h: 20, kat: 0, v: 0 };
   const s = P.checkpoint ? { x: P.checkpoint.x, y: P.checkpoint.y } : P.start;
   gracz = { x: s.x, y: s.y, w: 10, h: 21, vx: 0, vy: 0, dir: 1, naZiemi: false, hp: 3, nietykalny: 0, martwy: 0, anim: 0, coyote: 0, bufor: 0, drabina: false, platforma: null, wygrana: 0, mrug: 0 };
   kamera.x = klamra(gracz.x - W / 2, 0, P.szer * T - W); kamera.y = klamra(gracz.y - H / 2, 0, P.wys * T - H);
@@ -396,7 +396,7 @@ function pokonajBossa(w) {
   czastki(w.x + w.w / 2, w.y + w.h / 2, 40, ['#D8D8D8', '#2F353A', '#FFE066', '#FFFFFF'], { sila: 2.4, czas: 1.6 });
   D.sfx('koniecPoziomu'); D.grajMuzyke(P.def.muzyka);
   const d = P.def.dzwonPoBossie;
-  if (d) { P.dzwon = { x: d.x * T + 2, y: d.y * T, w: 12, h: 11, kat: 0, v: 0, pojawia: 1 }; napis(d.x * T - 20, d.y * T - 12, 'Dzwon odzyskany!', '#FFE066'); }
+  if (d) { P.dzwon = { x: d.x * T + 2, y: d.y * T, w: 12, h: 20, kat: 0, v: 0, pojawia: 1 }; napis(d.x * T - 20, d.y * T - 12, 'Dzwon odzyskany!', '#FFE066'); }
 }
 
 function aktualizujStrzaly() {

@@ -261,7 +261,7 @@ const KAFLE = {
   'C': { tex: 'bruk', staly: true },
   'P': { tex: 'deski', staly: true },
   'N': { tex: 'cDeski', staly: true },
-  'L': { tex: 'pien', staly: true },
+  'L': { tex: 'pien' },                                              // pień drzewa — tło, można przez niego przejść
   'l': { tex: 'liscie', staly: true },
   'B': { tex: 'cegly', staly: true },
   'O': { tex: 'obsyd', staly: true },
@@ -280,6 +280,7 @@ const KAFLE = {
   '*': { pochodnia: true, swiatlo: 40 },
   'X': { tex: 'niewidz', staly: true, niewidz: true },
   'F': { tex: 'plotek', staly: true },
+  '|': { tex: 'plotek' },                                            // słupek dekoracyjny (tło)
   'R': { tex: 'bookshelf', staly: true },
   'w': { tex: 'okno', staly: true },
   'T': { tex: 'tnt', staly: true },
