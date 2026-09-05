@@ -93,8 +93,10 @@ jobs:
           }
           console.log('OK: wszystkie lokalne zasoby HTML są w artefakcie')
           EOF
-      - uses: actions/upload-pages-artifact@v3
+      - name: Wgraj artefakt Pages
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-      - id: wdrozenie
+      - name: Opublikuj w GitHub Pages
+        id: wdrozenie
         uses: actions/deploy-pages@v4
