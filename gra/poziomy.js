@@ -69,6 +69,7 @@ const POZIOMY = [];
   put(53, 9, 'z');
   put(62, 11, 'f');
   schody(64, 12, 3);                                                 // schody na dach drugiego domu
+  put(67, 12, '^');                                                  // wąska szczelina (3 głęboka, bez wyjścia) — celowo śmiertelna: dotyk = śmierć i powrót do checkpointu, zamiast utykania
   dom(68, 12, 7, 4); put(74, 10, ' '); put(74, 9, ' '); szmaragdy(70, 10, 3); put(71, 4, 'a');
   put(80, 11, 'z');
   dziura(84, 86);
@@ -180,7 +181,7 @@ const POZIOMY = [];
   rzad(113, 13, '###'); rzad(117, 11, '###'); szmaragdy(117, 9, 3);
   fill(119, 15, 122, 17, '#');
   put(121, 14, 'k');
-  fill(124, 17, 132, 17, '^');                                        // szyb z naciekami
+  fill(123, 17, 132, 17, '^');                                        // szyb z naciekami — zaczyna się od razu przy ścianie (x=123), bez wąskiej "bezpiecznej" kieszeni przed nim
   rzad(124, 14, '_'); rzad(126, 12, '_'); rzad(128, 14, '_'); rzad(130, 12, '_'); rzad(132, 14, '_');
   szmaragdy(125, 10, 4, 2);
   fill(134, 16, 137, 17, '#'); put(136, 15, 'c');

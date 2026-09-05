@@ -338,7 +338,8 @@ function domki(g, W, H, cam, poziomY, wsp) {
     g.fillStyle = '#6E6E6E'; g.fillRect(x | 0, y + h - 6, w, 6);
     g.fillStyle = '#9E7C43'; g.fillRect(x | 0, y, w, h - 6);
     g.fillStyle = '#4A3220';
-    for (let s = 0; s < 6; s++) g.fillRect((x + s * 2) | 0, y - 10 + s * 2 - 1, w - s * 4, 2);
+    // dach: wąski szczyt (s=0, najwyżej) -> szeroka podstawa tuż nad ścianami (s=5), czyli normalny "daszek", nie odwrócony
+    for (let s = 0; s < 6; s++) g.fillRect((x + 2 * (5 - s)) | 0, y - 10 + s * 2 - 1, w - 4 * (5 - s), 2);
     g.fillStyle = '#E9F6FF'; g.fillRect((x + 6) | 0, y + 5, 5, 5); g.fillRect((x + w - 11) | 0, y + 5, 5, 5);
   }
 }
