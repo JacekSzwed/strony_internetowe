@@ -35,14 +35,31 @@ jobs:
       - uses: actions/configure-pages@v5
       - name: Przygotuj pliki strony
         run: |
-          mkdir -p dist/gra
-          cp index.html gra.html swiat.js z4xmg666.jpg dist/
-          for plik in gra/*.js; do
-            case "$plik" in
-              gra/test-*.js) continue ;;
-            esac
-            cp "$plik" dist/gra/
-          done
+          node - <<'EOF'
+          const fs = require('fs')
+          const path = require('path')
+          const dist = 'dist'
+          const htmlPliki = ['index.html', 'gra.html']
+          const attr = /\b(?:src|href)=["']([^"']+)["']/g
+          const pomin = /^(https?:|data:|#|mailto:|tel:)/
+          fs.rmSync(dist, { recursive: true, force: true })
+          fs.mkdirSync(dist, { recursive: true })
+          const kopiuj = rel => {
+            const src = path.normalize(rel)
+            const dst = path.join(dist, src)
+            fs.mkdirSync(path.dirname(dst), { recursive: true })
+            fs.copyFileSync(src, dst)
+          }
+          for (const nazwa of htmlPliki) kopiuj(nazwa)
+          for (const nazwa of htmlPliki) {
+            const html = fs.readFileSync(nazwa, 'utf8')
+            for (const dopasowanie of html.matchAll(attr)) {
+              const rel = dopasowanie[1].split('?')[0]
+              if (!rel || pomin.test(rel)) continue
+              kopiuj(rel)
+            }
+          }
+          EOF
       - name: Sprawdź lokalne zasoby HTML
         run: |
           node - <<'EOF'
