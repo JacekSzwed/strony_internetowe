@@ -202,7 +202,7 @@ const POZIOMY = [];
   POZIOMY.push({
     nazwa: 'Jaskinia', motyw: 'jaskinia', muzyka: 'jaskinia', mapa: mapa(), ciemnosc: .74,
     opis: 'Trop prowadzi pod ziemię. W ciemności słychać kapanie wody i syk... Trzymaj się światła pochodni.',
-    npc: { 8: 'W ciemności widać tylko przy pochodniach. Lawa zabija natychmiast, a nacieki ranią. Wchodź na drabiny strzałką w górę.' },
+    npc: { 8: 'W ciemności widać tylko przy pochodniach. Lawa i nacieki zabijają natychmiast — trzymaj się z daleka! Wchodź na drabiny strzałką w górę.' },
   });
 })();
 
@@ -266,7 +266,7 @@ const POZIOMY = [];
   POZIOMY.push({
     nazwa: 'Opuszczona Kopalnia', motyw: 'kopalnia', muzyka: 'jaskinia', mapa: mapa(), ciemnosc: .6,
     opis: 'Stare tory prowadzą przez zalane lawą szyby. Pillagerzy rozstawili tu straże z kuszami.',
-    npc: { 8: 'Ruchome platformy przeniosą cię nad lawą. Pillagerzy strzelają z kusz — przeskakuj strzały i skacz im na głowy!' },
+    npc: { 8: 'Ruchome platformy przeniosą cię nad lawą. Uważaj też na nacieki (kolce) — jak lawa, zabijają od razu. Pillagerzy strzelają z kusz — przeskakuj strzały i skacz im na głowy!' },
   });
 })();
 

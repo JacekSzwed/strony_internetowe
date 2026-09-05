@@ -286,7 +286,7 @@ const KAFLE = {
   'T': { tex: 'tnt', staly: true },
   'M': { tex: 'mech', staly: true },
   'U': { tex: 'trawaSnieg', staly: true },
-  '^': { kolce: true, rani: true },
+  '^': { kolce: true, smiertelne: true },                             // nacieki: dotyk = natychmiastowa śmierć (jak lawa) — zapobiega utknięciu w studni
 };
 const TEX = {};
 for (const k in KAFLE) { const t = KAFLE[k].tex; if (t && !TEX[t]) TEX[t] = [0, 1, 2].map(w => tekstura(t, w)); }

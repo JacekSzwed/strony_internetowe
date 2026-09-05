@@ -14,9 +14,10 @@ canvas.width = W; canvas.height = H; g.imageSmoothingEnabled = false;
 const ciemnoscPlotno = G.plotno(W, H), gc = ciemnoscPlotno.getContext('2d');
 
 function dopasuj() {
-  let s = Math.min(innerWidth / W, innerHeight / H);
-  if (s >= 2) s = Math.floor(s);
-  canvas.style.width = Math.floor(W * s) + 'px'; canvas.style.height = Math.floor(H * s) + 'px';
+  // Skala MUSI być liczbą całkowitą — inaczej piksele canvasu nie mapują się 1:1 na piksele ekranu
+  // i przy najmniejszym ruchu kamery/postaci krawędzie sprite'ów migoczą ("wibrują").
+  const s = Math.max(1, Math.floor(Math.min(innerWidth / W, innerHeight / H)));
+  canvas.style.width = (W * s) + 'px'; canvas.style.height = (H * s) + 'px';
 }
 addEventListener('resize', dopasuj); dopasuj();
 
@@ -151,7 +152,11 @@ function ruszY(e, dy) {
   e.y += dy; e.naZiemi = false;
   const x0 = Math.floor(e.x / T), x1 = Math.floor((e.x + e.w - 1) / T);
   if (dy > 0) {
-    const ty = Math.floor((e.y + e.h - 1) / T);
+    // Sprawdzamy kafel TUŻ pod stopami (e.h, nie e.h-1) — dzięki temu kolizja z podłożem
+    // wykrywa się natychmiast w tej samej klatce co dodanie grawitacji, a nie dopiero gdy
+    // ciało "zapadnie się" o cały piksel. Bez tego postać co kilka klatek drgała o 1px
+    // (grawitacja przesuwała ją w dół, a kolizja cofała dopiero klatkę czy dwie później).
+    const ty = Math.floor((e.y + e.h) / T);
     for (let tx = x0; tx <= x1; tx++) {
       const ch = kafel(tx, ty), d = KAFLE[ch];
       if (staly(ch) || (d && d.polka && stareDol <= ty * T + .5)) { e.y = ty * T - e.h; e.vy = 0; e.naZiemi = true; break; }
@@ -239,6 +244,7 @@ function aktualizujGracza() {
 
   // zagrożenia
   if (dotykaKafla(p, d => d.lawa)) { zabijGracza('lawa'); return; }
+  if (dotykaKafla(p, d => d.smiertelne)) { zabijGracza('kolce'); return; }   // nacieki/kolce: śmierć i powrót do checkpointu (nie da się w nich utknąć)
   if (p.y > P.wys * T + 30) { zabijGracza('spadek'); return; }
   if (dotykaKafla(p, d => d.rani)) zranGracza(1, p.dir * -1);
 
